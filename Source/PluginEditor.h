@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <JuceHeader.h>
@@ -21,9 +20,6 @@ private:
 
     juce::Label title;
     juce::Label subtitle;
-    juce::Label oscillatorHeading;
-    juce::Label movementHeading;
-    juce::Label waveformLabel;
 
     std::array<juce::Slider, controlCount> sliders;
     std::array<juce::Label, controlCount> labels;
@@ -35,6 +31,7 @@ private:
         sliderAttachments;
 
     juce::ComboBox waveform;
+    juce::Label waveformLabel;
 
     std::unique_ptr<
         juce::AudioProcessorValueTreeState::ComboBoxAttachment>
