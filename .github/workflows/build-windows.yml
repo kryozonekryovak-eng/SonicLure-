@@ -1,0 +1,31 @@
+
+name: Build SonicLure VST3
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Download SonicLure source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure SonicLure
+        run: cmake -B build -S . -A x64
+
+      - name: Compile Windows VST3
+        run: cmake --build build --config Release --parallel 2
+
+      - name: Upload SonicLure VST3
+        uses: actions/upload-artifact@v4
+        with:
+          name: SonicLure-Windows-VST3
+          path: build/SonicLure_artefacts/Release/VST3/
+          if-no-files-found: error
