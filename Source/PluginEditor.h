@@ -3,6 +3,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include <array>
 
 class SonicLureAudioProcessorEditor : public juce::AudioProcessorEditor
 {
@@ -16,40 +17,30 @@ public:
 private:
     SonicLureAudioProcessor& audioProcessor;
 
+    static constexpr int controlCount = 14;
+
     juce::Label title;
     juce::Label subtitle;
-
-    juce::Slider attack;
-    juce::Slider release;
-    juce::Slider brightness;
-    juce::Slider drift;
-    juce::Slider tide;
-    juce::Slider output;
-
-    juce::ComboBox waveform;
-
-    juce::Label attackLabel;
-    juce::Label releaseLabel;
-    juce::Label brightnessLabel;
-    juce::Label driftLabel;
-    juce::Label tideLabel;
-    juce::Label outputLabel;
+    juce::Label oscillatorHeading;
+    juce::Label movementHeading;
     juce::Label waveformLabel;
+
+    std::array<juce::Slider, controlCount> sliders;
+    std::array<juce::Label, controlCount> labels;
 
     using SliderAttachment =
         juce::AudioProcessorValueTreeState::SliderAttachment;
 
-    std::unique_ptr<SliderAttachment> attackAttachment;
-    std::unique_ptr<SliderAttachment> releaseAttachment;
-    std::unique_ptr<SliderAttachment> brightnessAttachment;
-    std::unique_ptr<SliderAttachment> driftAttachment;
-    std::unique_ptr<SliderAttachment> tideAttachment;
-    std::unique_ptr<SliderAttachment> outputAttachment;
+    std::array<std::unique_ptr<SliderAttachment>, controlCount>
+        sliderAttachments;
 
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment>
+    juce::ComboBox waveform;
+
+    std::unique_ptr<
+        juce::AudioProcessorValueTreeState::ComboBoxAttachment>
         waveformAttachment;
 
-    void setupSlider(juce::Slider&, juce::Label&, const juce::String&);
+    void setupSlider(int index, const juce::String& labelText);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(
         SonicLureAudioProcessorEditor)
