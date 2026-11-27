@@ -1,6 +1,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include <cmath>
 
 namespace
 {
@@ -20,7 +21,15 @@ namespace
               brightness(state.getRawParameterValue("BRIGHTNESS")),
               drift(state.getRawParameterValue("DRIFT")),
               tide(state.getRawParameterValue("TIDE")),
-              waveform(state.getRawParameterValue("WAVEFORM"))
+              waveform(state.getRawParameterValue("WAVEFORM")),
+              osc1Level(state.getRawParameterValue("OSC1_LEVEL")),
+              osc2Level(state.getRawParameterValue("OSC2_LEVEL")),
+              osc3Level(state.getRawParameterValue("OSC3_LEVEL")),
+              osc2Detune(state.getRawParameterValue("OSC2_DETUNE")),
+              osc3Detune(state.getRawParameterValue("OSC3_DETUNE")),
+              subLevel(state.getRawParameterValue("SUB_LEVEL")),
+              noiseLevel(state.getRawParameterValue("NOISE_LEVEL")),
+              filterCutoff(state.getRawParameterValue("FILTER_CUTOFF"))
         {
         }
 
@@ -34,8 +43,13 @@ namespace
         {
             frequency = juce::MidiMessage::getMidiNoteInHertz(midiNote);
             level = velocity;
-            phase = 0.0;
+
+            phase1 = 0.0;
+            phase2 = 0.0;
+            phase3 = 0.0;
+            subPhase = 0.0;
             driftPhase = 0.0;
+            filterState = 0.0f;
 
             juce::ADSR::Parameters envelope;
             envelope.attack = attack->load();
@@ -74,39 +88,87 @@ namespace
             const float tone = brightness->load();
             const float movement = drift->load();
             const float tideAmount = tide->load();
-            const int wave = juce::roundToInt(waveform->load());
+            const int baseWave = juce::roundToInt(waveform->load());
+
+            const float level1 = osc1Level->load();
+            const float level2 = osc2Level->load();
+            const float level3 = osc3Level->load();
+            const float detune2 = osc2Detune->load();
+            const float detune3 = osc3Detune->load();
+            const float sub = subLevel->load();
+            const float noise = noiseLevel->load();
+
+            const float cutoff = juce::jlimit(
+                200.0f, 18000.0f, filterCutoff->load());
+
+            const float filterCoefficient =
+                1.0f - std::exp(
+                    -juce::MathConstants<float>::twoPi
+                    * cutoff / static_cast<float>(sampleRate));
 
             for (int sample = 0; sample < numSamples; ++sample)
             {
                 driftPhase += 0.0007 * movement;
+
                 const double modulation =
-                    std::sin(driftPhase) * movement * 0.015;
+                    std::sin(driftPhase) * movement * 0.015
+                    + std::sin(driftPhase * 0.25)
+                    * tideAmount * 0.02;
 
-                const double currentFrequency =
-                    frequency * (1.0 + modulation
-                    + std::sin(driftPhase * 0.25) * tideAmount * 0.02);
+                const double baseFrequency =
+                    frequency * (1.0 + modulation);
 
-                const double increment = currentFrequency / sampleRate;
-                phase += increment;
-                if (phase >= 1.0)
-                    phase -= 1.0;
+                phase1 += baseFrequency / sampleRate;
+
+                phase2 += baseFrequency
+                    * std::pow(2.0, detune2 / 1200.0)
+                    / sampleRate;
+
+                phase3 += baseFrequency
+                    * std::pow(2.0, detune3 / 1200.0)
+                    / sampleRate;
+
+                subPhase += (baseFrequency * 0.5) / sampleRate;
+
+                if (phase1 >= 1.0) phase1 -= 1.0;
+                if (phase2 >= 1.0) phase2 -= 1.0;
+                if (phase3 >= 1.0) phase3 -= 1.0;
+                if (subPhase >= 1.0) subPhase -= 1.0;
+
+                const int wave1 = baseWave;
+                const int wave2 = (baseWave + 1) % 3;
+                const int wave3 = (baseWave + 2) % 3;
 
                 float signal = 0.0f;
 
-                if (wave == 1)
-                    signal = static_cast<float>(2.0 * phase - 1.0);
-                else if (wave == 2)
-                    signal = phase < 0.5 ? 1.0f : -1.0f;
-                else
-                    signal = static_cast<float>(
-                        std::sin(phase * juce::MathConstants<double>::twoPi));
+                signal += oscillatorSample(phase1, wave1) * level1;
+                signal += oscillatorSample(phase2, wave2) * level2;
+                signal += oscillatorSample(phase3, wave3) * level3;
+
+                signal += static_cast<float>(
+                    std::sin(subPhase
+                    * juce::MathConstants<double>::twoPi)) * sub;
+
+                signal += (random.nextFloat() * 2.0f - 1.0f) * noise;
 
                 const float envelope = adsr.getNextSample();
-                const float output = signal * envelope * level
-                                   * (0.25f + tone * 0.5f);
 
-                for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
-                    buffer.addSample(channel, startSample + sample, output);
+                signal *= envelope * level;
+
+                // Smooth low-pass tone shaping
+                filterState += filterCoefficient * (signal - filterState);
+
+                // Brightness blend
+                const float output =
+                    filterState * (1.0f - tone * 0.35f)
+                    + signal * tone * 0.35f;
+
+                for (int channel = 0;
+                     channel < buffer.getNumChannels(); ++channel)
+                {
+                    buffer.addSample(
+                        channel, startSample + sample, output * 0.35f);
+                }
             }
 
             if (!adsr.isActive())
@@ -114,6 +176,18 @@ namespace
         }
 
     private:
+        static float oscillatorSample(double phase, int wave)
+        {
+            if (wave == 1)
+                return static_cast<float>(2.0 * phase - 1.0);
+
+            if (wave == 2)
+                return phase < 0.5 ? 1.0f : -1.0f;
+
+            return static_cast<float>(
+                std::sin(phase * juce::MathConstants<double>::twoPi));
+        }
+
         std::atomic<float>* attack;
         std::atomic<float>* release;
         std::atomic<float>* brightness;
@@ -121,11 +195,27 @@ namespace
         std::atomic<float>* tide;
         std::atomic<float>* waveform;
 
+        std::atomic<float>* osc1Level;
+        std::atomic<float>* osc2Level;
+        std::atomic<float>* osc3Level;
+        std::atomic<float>* osc2Detune;
+        std::atomic<float>* osc3Detune;
+        std::atomic<float>* subLevel;
+        std::atomic<float>* noiseLevel;
+        std::atomic<float>* filterCutoff;
+
         juce::ADSR adsr;
-        double phase = 0.0;
+        juce::Random random;
+
+        double phase1 = 0.0;
+        double phase2 = 0.0;
+        double phase3 = 0.0;
+        double subPhase = 0.0;
         double driftPhase = 0.0;
         double frequency = 440.0;
+
         float level = 0.0f;
+        float filterState = 0.0f;
     };
 }
 
@@ -169,6 +259,37 @@ SonicLureAudioProcessor::createParameterLayout()
         "WAVEFORM", "Waveform",
         juce::StringArray { "Sine", "Saw", "Square" }, 0));
 
+    // Three independent oscillator levels
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "OSC1_LEVEL", "Oscillator 1", 0.0f, 1.0f, 0.60f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "OSC2_LEVEL", "Oscillator 2", 0.0f, 1.0f, 0.28f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "OSC3_LEVEL", "Oscillator 3", 0.0f, 1.0f, 0.18f));
+
+    // Oscillator tuning in cents
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "OSC2_DETUNE", "Oscillator 2 Detune",
+        -24.0f, 24.0f, 7.0f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "OSC3_DETUNE", "Oscillator 3 Detune",
+        -24.0f, 24.0f, -12.0f));
+
+    // Sub-bass and noise
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "SUB_LEVEL", "Sub Bass", 0.0f, 1.0f, 0.30f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "NOISE_LEVEL", "Noise", 0.0f, 1.0f, 0.015f));
+
+    // Tone shaping
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "FILTER_CUTOFF", "Filter Cutoff",
+        200.0f, 18000.0f, 12000.0f));
+
     return layout;
 }
 
@@ -188,7 +309,6 @@ void SonicLureAudioProcessor::processBlock(
     synthesiser.renderNextBlock(buffer, midi, 0, buffer.getNumSamples());
 
     const float gain = parameters.getRawParameterValue("OUTPUT")->load();
-
     buffer.applyGain(gain);
 }
 
