@@ -1,31 +1,29 @@
 
-name: Build SonicLure VST3
+name: Build LureX VST3
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      - name: Download SonicLure source
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      - name: Configure SonicLure
+      - name: Configure LureX
         run: cmake -B build -S . -A x64
 
-      - name: Compile Windows VST3
+      - name: Build LureX
         run: cmake --build build --config Release --parallel 2
 
-      - name: Upload SonicLure VST3
+      - name: Upload LureX VST3
         uses: actions/upload-artifact@v4
         with:
-          name: SonicLure-Windows-VST3
-          path: build/SonicLure_artefacts/Release/VST3/
+          name: LureX-Windows-VST3
+          path: build/LureX_artefacts/Release/VST3/LureX.vst3
           if-no-files-found: error
