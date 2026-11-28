@@ -1,14 +1,15 @@
 
 #pragma once
+
 #include <JuceHeader.h>
 #include <array>
 #include <atomic>
 
-class XLUREAudioProcessor : public juce::AudioProcessor
+class PURELUREAudioProcessor : public juce::AudioProcessor
 {
 public:
-    XLUREAudioProcessor();
-    ~XLUREAudioProcessor() override;
+    PURELUREAudioProcessor();
+    ~PURELUREAudioProcessor() override;
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -89,7 +90,7 @@ private:
 
     juce::AudioFormatManager formatManager;
     juce::AudioBuffer<float> sampleBuffer;
-    juce::CriticalSection samplerLock;
+    mutable juce::CriticalSection samplerLock;
     juce::String loadedSampleName;
     double loadedSampleRate = 44100.0;
 
@@ -125,5 +126,5 @@ private:
     float renderModal(XLUREVoice& voice, float brightness);
     void resetVoice(XLUREVoice& voice);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(XLUREAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PURELUREAudioProcessor)
 };
