@@ -1,6 +1,7 @@
+
 cmake_minimum_required(VERSION 3.22)
 
-project(XLURE VERSION 0.1.0)
+project(PURELURE VERSION 0.1.0)
 
 include(FetchContent)
 
@@ -12,13 +13,13 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(JUCE)
 
-juce_add_plugin(XLURE
+juce_add_plugin(PURELURE
     COMPANY_NAME "KRYOZONE AUDIO"
-    BUNDLE_ID com.kryozoneaudio.XLURE
+    BUNDLE_ID com.kryozoneaudio.purelure
     PLUGIN_MANUFACTURER_CODE Kryo
-    PLUGIN_CODE Xlur
+    PLUGIN_CODE Purl
     FORMATS VST3
-    PRODUCT_NAME "XLURE"
+    PRODUCT_NAME "PURELURE"
     IS_SYNTH TRUE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT FALSE
@@ -27,22 +28,22 @@ juce_add_plugin(XLURE
     COPY_PLUGIN_AFTER_BUILD FALSE
 )
 
-juce_generate_juce_header(XLURE)
+juce_generate_juce_header(PURELURE)
 
-target_sources(XLURE PRIVATE
+target_sources(PURELURE PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
 )
 
-target_compile_features(XLURE PRIVATE cxx_std_17)
+target_compile_features(PURELURE PRIVATE cxx_std_17)
 
-target_compile_definitions(XLURE PUBLIC
+target_compile_definitions(PURELURE PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0
 )
 
-target_link_libraries(XLURE PRIVATE
+target_link_libraries(PURELURE PRIVATE
     juce::juce_audio_utils
     juce::juce_audio_processors
     juce::juce_dsp
