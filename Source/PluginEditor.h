@@ -2,25 +2,28 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <memory>
 #include "PluginProcessor.h"
 
 class PURELUREAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
-    explicit PURELUREAudioProcessorEditor(PURELUREAudioProcessor& processor);
+    explicit PURELUREAudioProcessorEditor(PURELUREAudioProcessor&);
     ~PURELUREAudioProcessorEditor() override;
 
-    void paint(juce::Graphics& g) override;
+    void paint(juce::Graphics&) override;
     void resized() override;
 
 private:
+    // Animated liquid display
     class LiquidWindow : public juce::Component,
                          private juce::Timer
     {
     public:
         LiquidWindow();
+
         void setTheme(int newTheme);
-        void paint(juce::Graphics& g) override;
+        void paint(juce::Graphics&) override;
 
     private:
         void timerCallback() override;
@@ -37,19 +40,23 @@ private:
 
     LiquidWindow liquidWindow;
 
-    juce::TextButton oceanButton { "OCEAN" };
-    juce::TextButton muddyButton { "MUDDY PUDDLE" };
-    juce::TextButton riverButton { "RIVER" };
-    juce::TextButton lilyButton { "LILY POND" };
-
+    // Main labels
     juce::Label titleLabel;
     juce::Label subtitleLabel;
     juce::Label sampleLabel;
     juce::Label statusLabel;
 
-    juce::TextButton loadButton { "LOAD WAV" };
-    juce::TextButton playButton { "PLAY" };
+    // Theme buttons
+    juce::TextButton oceanButton { "OCEAN" };
+    juce::TextButton muddyButton { "MUDDY PUDDLE" };
+    juce::TextButton riverButton { "RIVER" };
+    juce::TextButton lilyButton { "LILY POND" };
 
+    // Sample buttons
+    juce::TextButton loadButton { "LOAD WAV" };
+    juce::TextButton playButton { "PLAY SAMPLE" };
+
+    // Synthesis controls
     juce::Slider cutoffSlider;
     juce::Slider resonanceSlider;
     juce::Slider masterSlider;
@@ -60,14 +67,16 @@ private:
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 
-    void loadWavFile();
-    void selectTheme(int theme);
+    // Interface helpers
     void styleButton(juce::TextButton& button);
 
     void setupSlider(
         juce::Slider& slider,
         juce::Label& label,
         const juce::String& name);
+
+    void selectTheme(int themeIndex);
+    void loadWavFile();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(
         PURELUREAudioProcessorEditor)
