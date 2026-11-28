@@ -34,7 +34,6 @@ private:
     };
 
     PURELUREAudioProcessor& audioProcessor;
-
     LiquidWindow liquidWindow;
 
     juce::Label titleLabel;
