@@ -2,12 +2,16 @@
 #include "PluginEditor.h"
 #include <cmath>
 
-// LIQUID DISPLAY
+namespace
+{
+    constexpr float twoPi = juce::MathConstants<float>::twoPi;
+}
 
 PURELUREAudioProcessorEditor::LiquidWindow::LiquidWindow()
 {
-    setTheme(0);
+    setOpaque(true);
     startTimerHz(30);
+    setTheme(0);
 }
 
 void PURELUREAudioProcessorEditor::LiquidWindow::setTheme(int newTheme)
@@ -17,24 +21,27 @@ void PURELUREAudioProcessorEditor::LiquidWindow::setTheme(int newTheme)
     switch (theme)
     {
         case 0:
-            backgroundColour = juce::Colour::fromRGB(5, 17, 35);
-            liquidColour = juce::Colour::fromRGB(0, 150, 220);
-            highlightColour = juce::Colour::fromRGB(100, 235, 255);
+            backgroundColour = juce::Colour(0xff071c2b);
+            liquidColour = juce::Colour(0xff087eaa);
+            highlightColour = juce::Colour(0xff54e6ff);
             break;
+
         case 1:
-            backgroundColour = juce::Colour::fromRGB(35, 23, 13);
-            liquidColour = juce::Colour::fromRGB(175, 105, 40);
-            highlightColour = juce::Colour::fromRGB(255, 195, 100);
+            backgroundColour = juce::Colour(0xff211b16);
+            liquidColour = juce::Colour(0xff76603b);
+            highlightColour = juce::Colour(0xffd5bd82);
             break;
+
         case 2:
-            backgroundColour = juce::Colour::fromRGB(5, 28, 28);
-            liquidColour = juce::Colour::fromRGB(0, 190, 135);
-            highlightColour = juce::Colour::fromRGB(100, 255, 205);
+            backgroundColour = juce::Colour(0xff071e1b);
+            liquidColour = juce::Colour(0xff087c65);
+            highlightColour = juce::Colour(0xff61f5c2);
             break;
+
         default:
-            backgroundColour = juce::Colour::fromRGB(10, 31, 25);
-            liquidColour = juce::Colour::fromRGB(75, 180, 115);
-            highlightColour = juce::Colour::fromRGB(170, 255, 185);
+            backgroundColour = juce::Colour(0xff14201d);
+            liquidColour = juce::Colour(0xff416b54);
+            highlightColour = juce::Colour(0xffb4f4b0);
             break;
     }
 
@@ -43,178 +50,140 @@ void PURELUREAudioProcessorEditor::LiquidWindow::setTheme(int newTheme)
 
 void PURELUREAudioProcessorEditor::LiquidWindow::timerCallback()
 {
-    animationPhase += 0.035f;
+    animationPhase += 0.025f;
 
-    if (animationPhase > juce::MathConstants<float>::twoPi)
-        animationPhase -= juce::MathConstants<float>::twoPi;
+    if (animationPhase > twoPi)
+        animationPhase -= twoPi;
 
     repaint();
 }
 
-void PURELUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
+void PURELUREAudioProcessorEditor::LiquidWindow::paint(
+    juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat();
 
-    const float diameter = juce::jmin(
-        bounds.getWidth(), bounds.getHeight()) - 12.0f;
+    g.fillAll(backgroundColour);
 
-    const float centreX = bounds.getCentreX();
-    const float centreY = bounds.getCentreY();
-    const float radius = diameter * 0.5f;
+    juce::ColourGradient background(
+        backgroundColour.brighter(0.12f),
+        bounds.getTopLeft(),
+        backgroundColour.darker(0.5f),
+        bounds.getBottomRight(),
+        false);
 
-    juce::Rectangle<float> circle(
-        centreX - radius, centreY - radius, diameter, diameter);
-
-    g.setColour(liquidColour.withAlpha(0.12f));
-    g.fillEllipse(circle.expanded(8.0f));
-
-    g.setColour(backgroundColour);
-    g.fillEllipse(circle);
-
-    juce::Path clippingPath;
-    clippingPath.addEllipse(circle);
-
-    g.saveState();
-    g.reduceClipRegion(clippingPath);
-
-    g.setColour(liquidColour.withAlpha(0.25f));
-    g.fillEllipse(circle);
-
-    const float waveOne = std::sin(animationPhase) * radius * 0.10f;
-    const float waveTwo = std::cos(animationPhase * 0.75f) * radius * 0.09f;
-    const float waveThree = std::sin(animationPhase * 1.3f) * radius * 0.06f;
-
-    juce::ColourGradient gradient(
-        highlightColour.withAlpha(0.85f),
-        centreX - radius * 0.45f,
-        centreY - radius * 0.55f,
-        liquidColour.withAlpha(0.55f),
-        centreX + radius * 0.55f,
-        centreY + radius * 0.65f,
-        true);
-
-    g.setGradientFill(gradient);
+    g.setGradientFill(background);
+    g.fillRect(bounds);
 
     juce::Path liquid;
-    liquid.startNewSubPath(centreX - radius, centreY + waveOne);
 
-    liquid.cubicTo(
-        centreX - radius * 0.55f,
-        centreY - radius * 0.65f + waveTwo,
-        centreX + radius * 0.15f,
-        centreY - radius * 0.75f,
-        centreX + radius,
-        centreY - radius * 0.20f + waveThree);
+    const float baseY = bounds.getHeight() * 0.78f;
+    const float width = bounds.getWidth();
 
-    liquid.lineTo(centreX + radius, centreY + radius);
-    liquid.lineTo(centreX - radius, centreY + radius);
+    liquid.startNewSubPath(0.0f, baseY);
+
+    for (int x = 0; x <= static_cast<int>(width); x += 4)
+    {
+        const float xf = static_cast<float>(x);
+
+        const float wave =
+            std::sin(xf * 0.012f + animationPhase) * 12.0f
+            + std::sin(xf * 0.021f - animationPhase * 0.7f) * 7.0f;
+
+        liquid.lineTo(xf, baseY + wave);
+    }
+
+    liquid.lineTo(bounds.getRight(), bounds.getBottom());
+    liquid.lineTo(bounds.getLeft(), bounds.getBottom());
     liquid.closeSubPath();
 
+    g.setColour(liquidColour.withAlpha(0.22f));
     g.fillPath(liquid);
 
-    g.setColour(highlightColour.withAlpha(0.22f));
-
-    juce::Path highlight;
-    highlight.startNewSubPath(
-        centreX - radius,
-        centreY + radius * 0.15f + waveTwo);
-
-    highlight.cubicTo(
-        centreX - radius * 0.4f,
-        centreY - radius * 0.05f + waveThree,
-        centreX + radius * 0.35f,
-        centreY + radius * 0.30f + waveOne,
-        centreX + radius,
-        centreY + radius * 0.05f);
-
-    g.strokePath(highlight, juce::PathStrokeType(3.0f));
-
-    g.setColour(highlightColour.withAlpha(0.12f));
-    g.fillEllipse(
-        centreX - radius * 0.30f,
-        centreY - radius * 0.30f,
-        radius * 0.60f,
-        radius * 0.60f);
-
-    g.restoreState();
-
-    g.setColour(highlightColour.withAlpha(0.65f));
-    g.drawEllipse(circle, 2.5f);
-
-    g.setColour(juce::Colours::white.withAlpha(0.12f));
-    g.drawEllipse(circle.reduced(6.0f), 1.0f);
+    g.setColour(highlightColour.withAlpha(0.45f));
+    g.strokePath(
+        liquid,
+        juce::PathStrokeType(1.5f));
 }
-
-// PURELURE EDITOR
 
 PURELUREAudioProcessorEditor::PURELUREAudioProcessorEditor(
     PURELUREAudioProcessor& processor)
-    : juce::AudioProcessorEditor(&processor),
+    : AudioProcessorEditor(&processor),
       audioProcessor(processor)
 {
-    setSize(850, 760);
-    setResizable(true, true);
-    setResizeLimits(650, 600, 1400, 1100);
+    setSize(900, 620);
 
-    addAndMakeVisible(titleLabel);
+    addAndMakeVisible(liquidWindow);
+    liquidWindow.toBack();
+
     titleLabel.setText("PURELURE", juce::dontSendNotification);
-    titleLabel.setFont(juce::Font(36.0f, juce::Font::bold));
+    titleLabel.setFont(juce::Font(34.0f, juce::Font::bold));
     titleLabel.setColour(
         juce::Label::textColourId,
-        juce::Colour::fromRGB(100, 225, 255));
+        juce::Colours::white);
+    titleLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(titleLabel);
 
-    addAndMakeVisible(subtitleLabel);
     subtitleLabel.setText(
-        "HYBRID SOUND LAB  |  ENTER THE LIQUID",
+        "LIQUID SOUND DESIGN SYNTHESIS",
         juce::dontSendNotification);
     subtitleLabel.setFont(juce::Font(12.0f));
     subtitleLabel.setColour(
         juce::Label::textColourId,
-        juce::Colours::lightgrey);
+        juce::Colours::lightblue);
+    subtitleLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(subtitleLabel);
 
-    addAndMakeVisible(liquidWindow);
+    sampleLabel.setText(
+        "NO SAMPLE LOADED",
+        juce::dontSendNotification);
+    sampleLabel.setColour(
+        juce::Label::textColourId,
+        juce::Colours::white);
+    sampleLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(sampleLabel);
 
-    addAndMakeVisible(oceanButton);
-    addAndMakeVisible(muddyButton);
-    addAndMakeVisible(riverButton);
-    addAndMakeVisible(lilyButton);
+    statusLabel.setText(
+        "READY",
+        juce::dontSendNotification);
+    statusLabel.setColour(
+        juce::Label::textColourId,
+        juce::Colours::lightgreen);
+    statusLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(statusLabel);
 
     styleButton(oceanButton);
     styleButton(muddyButton);
     styleButton(riverButton);
     styleButton(lilyButton);
+    styleButton(loadButton);
+    styleButton(playButton);
+
+    addAndMakeVisible(oceanButton);
+    addAndMakeVisible(muddyButton);
+    addAndMakeVisible(riverButton);
+    addAndMakeVisible(lilyButton);
+    addAndMakeVisible(loadButton);
+    addAndMakeVisible(playButton);
 
     oceanButton.onClick = [this] { selectTheme(0); };
     muddyButton.onClick = [this] { selectTheme(1); };
     riverButton.onClick = [this] { selectTheme(2); };
     lilyButton.onClick = [this] { selectTheme(3); };
 
-    selectTheme(0);
-
-    addAndMakeVisible(loadButton);
-    addAndMakeVisible(playButton);
-
-    styleButton(loadButton);
-    styleButton(playButton);
-
     loadButton.onClick = [this] { loadWavFile(); };
-    playButton.onClick = [this] { audioProcessor.playPreview(); };
 
-    addAndMakeVisible(sampleLabel);
-    sampleLabel.setText("NO WAV SAMPLE LOADED", juce::dontSendNotification);
-    sampleLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
-    sampleLabel.setFont(juce::Font(13.0f));
+    playButton.onClick = [this]
+    {
+        audioProcessor.playPreview();
+        statusLabel.setText(
+            "PREVIEW PLAYING",
+            juce::dontSendNotification);
+    };
 
-    addAndMakeVisible(statusLabel);
-    statusLabel.setText("READY", juce::dontSendNotification);
-    statusLabel.setColour(
-        juce::Label::textColourId,
-        juce::Colour::fromRGB(100, 225, 190));
-    statusLabel.setFont(juce::Font(12.0f));
-
-    setupSlider(cutoffSlider, cutoffLabel, "FILTER");
+    setupSlider(cutoffSlider, cutoffLabel, "FILTER CUTOFF");
     setupSlider(resonanceSlider, resonanceLabel, "RESONANCE");
-    setupSlider(masterSlider, masterLabel, "MASTER");
+    setupSlider(masterSlider, masterLabel, "MASTER LEVEL");
 
     cutoffSlider.setValue(0.65);
     resonanceSlider.setValue(0.15);
@@ -237,169 +206,202 @@ PURELUREAudioProcessorEditor::PURELUREAudioProcessorEditor(
         audioProcessor.setMasterLevel(
             static_cast<float>(masterSlider.getValue()));
     };
+
+    selectTheme(0);
 }
 
 PURELUREAudioProcessorEditor::~PURELUREAudioProcessorEditor() = default;
 
-// BACKGROUND
-
 void PURELUREAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colour::fromRGB(7, 11, 21));
-
-    g.setColour(juce::Colour::fromRGB(20, 39, 57));
-    g.drawHorizontalLine(82, 20.0f, getWidth() - 20.0f);
-
-    g.setColour(juce::Colour::fromRGB(40, 85, 110).withAlpha(0.5f));
+    g.setColour(juce::Colours::white.withAlpha(0.08f));
     g.drawRoundedRectangle(
-        getLocalBounds().toFloat().reduced(8.0f), 14.0f, 1.0f);
+        getLocalBounds().toFloat().reduced(8.0f),
+        16.0f,
+        1.5f);
 }
-
-// LAYOUT
 
 void PURELUREAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds().reduced(24);
 
-    titleLabel.setBounds(area.removeFromTop(44));
-    subtitleLabel.setBounds(area.removeFromTop(28));
+    liquidWindow.setBounds(getLocalBounds());
 
-    area.removeFromTop(12);
+    titleLabel.setBounds(area.removeFromTop(48));
+    subtitleLabel.setBounds(area.removeFromTop(26));
 
-    auto themeArea = area.removeFromTop(54);
-    const int halfWidth = themeArea.getWidth() / 2;
+    area.removeFromTop(18);
 
-    auto topLeft = themeArea.removeFromTop(27);
-    auto bottomLeft = themeArea.removeFromTop(27);
+    auto themeArea = area.removeFromTop(42);
 
-    oceanButton.setBounds(topLeft.removeFromLeft(halfWidth).reduced(3));
-    muddyButton.setBounds(topLeft.reduced(3));
+    const int themeWidth = themeArea.getWidth() / 4;
 
-    riverButton.setBounds(bottomLeft.removeFromLeft(halfWidth).reduced(3));
-    lilyButton.setBounds(bottomLeft.reduced(3));
+    oceanButton.setBounds(
+        themeArea.removeFromLeft(themeWidth).reduced(4));
 
-    area.removeFromTop(12);
+    muddyButton.setBounds(
+        themeArea.removeFromLeft(themeWidth).reduced(4));
 
-    auto displayArea = area.removeFromTop(
-        juce::jmax(230, area.getHeight() - 205));
+    riverButton.setBounds(
+        themeArea.removeFromLeft(themeWidth).reduced(4));
 
-    liquidWindow.setBounds(displayArea);
+    lilyButton.setBounds(
+        themeArea.reduced(4));
+
+    area.removeFromTop(28);
+
+    sampleLabel.setBounds(area.removeFromTop(30));
+    statusLabel.setBounds(area.removeFromTop(24));
 
     area.removeFromTop(10);
 
-    auto sampleArea = area.removeFromTop(26);
+    auto sampleButtons = area.removeFromTop(44);
 
-    sampleLabel.setBounds(
-        sampleArea.removeFromLeft(
-            juce::jmax(150, sampleArea.getWidth() - 130)));
+    loadButton.setBounds(
+        sampleButtons.removeFromLeft(
+            sampleButtons.getWidth() / 2).reduced(5));
 
-    statusLabel.setBounds(sampleArea);
+    playButton.setBounds(sampleButtons.reduced(5));
 
-    area.removeFromTop(8);
+    area.removeFromTop(30);
 
-    auto controlsArea = area;
+    auto controls = area.removeFromTop(210);
 
-    auto buttonsArea = controlsArea.removeFromLeft(
-        juce::jmin(190, controlsArea.getWidth() / 3));
+    const int controlWidth = controls.getWidth() / 3;
 
-    loadButton.setBounds(buttonsArea.removeFromTop(38).reduced(2));
-    playButton.setBounds(buttonsArea.removeFromTop(38).reduced(2));
+    cutoffLabel.setBounds(
+        controls.getX(),
+        controls.getY(),
+        controlWidth,
+        24);
 
-    controlsArea.removeFromLeft(10);
+    cutoffSlider.setBounds(
+        controls.getX(),
+        controls.getY() + 24,
+        controlWidth,
+        170);
 
-    const int controlWidth = controlsArea.getWidth() / 3;
+    resonanceLabel.setBounds(
+        controls.getX() + controlWidth,
+        controls.getY(),
+        controlWidth,
+        24);
 
-    auto cutoffArea = controlsArea.removeFromLeft(controlWidth);
-    auto resonanceArea = controlsArea.removeFromLeft(controlWidth);
-    auto masterArea = controlsArea;
+    resonanceSlider.setBounds(
+        controls.getX() + controlWidth,
+        controls.getY() + 24,
+        controlWidth,
+        170);
 
-    cutoffLabel.setBounds(cutoffArea.removeFromTop(20));
-    cutoffSlider.setBounds(cutoffArea);
+    masterLabel.setBounds(
+        controls.getX() + controlWidth * 2,
+        controls.getY(),
+        controlWidth,
+        24);
 
-    resonanceLabel.setBounds(resonanceArea.removeFromTop(20));
-    resonanceSlider.setBounds(resonanceArea);
-
-    masterLabel.setBounds(masterArea.removeFromTop(20));
-    masterSlider.setBounds(masterArea);
+    masterSlider.setBounds(
+        controls.getX() + controlWidth * 2,
+        controls.getY() + 24,
+        controlWidth,
+        170);
 }
 
-// BUTTON STYLING
-
-void PURELUREAudioProcessorEditor::styleButton(juce::TextButton& button)
+void PURELUREAudioProcessorEditor::styleButton(
+    juce::TextButton& button)
 {
     button.setColour(
         juce::TextButton::buttonColourId,
-        juce::Colour::fromRGB(18, 37, 54));
+        juce::Colour(0xff123c50));
 
     button.setColour(
         juce::TextButton::buttonOnColourId,
-        juce::Colour::fromRGB(0, 110, 145));
+        juce::Colour(0xff087eaa));
 
     button.setColour(
         juce::TextButton::textColourOffId,
-        juce::Colour::fromRGB(190, 225, 240));
+        juce::Colours::white);
 
     button.setColour(
         juce::TextButton::textColourOnId,
         juce::Colours::white);
-}
 
-// SLIDER SETUP
+    button.setColour(
+        juce::TextButton::buttonColourId,
+        juce::Colour(0xff123c50));
+
+    button.setConnectedEdges(0);
+}
 
 void PURELUREAudioProcessorEditor::setupSlider(
     juce::Slider& slider,
     juce::Label& label,
     const juce::String& name)
 {
-    addAndMakeVisible(slider);
-    addAndMakeVisible(label);
-
     label.setText(name, juce::dontSendNotification);
-    label.setFont(juce::Font(11.0f, juce::Font::bold));
+    label.setJustificationType(juce::Justification::centred);
     label.setColour(
         juce::Label::textColourId,
-        juce::Colour::fromRGB(115, 210, 235));
+        juce::Colours::white);
+    label.setFont(juce::Font(12.0f, juce::Font::bold));
 
-    label.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(label);
 
-    slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 55, 18);
+    slider.setSliderStyle(
+        juce::Slider::RotaryHorizontalVerticalDrag);
+
+    slider.setTextBoxStyle(
+        juce::Slider::TextBoxBelow,
+        false,
+        70,
+        22);
+
     slider.setRange(0.0, 1.0, 0.001);
 
     slider.setColour(
         juce::Slider::rotarySliderFillColourId,
-        juce::Colour::fromRGB(0, 180, 220));
+        juce::Colour(0xff22c8df));
 
     slider.setColour(
         juce::Slider::rotarySliderOutlineColourId,
-        juce::Colour::fromRGB(35, 65, 85));
+        juce::Colour(0xff31566b));
 
     slider.setColour(
         juce::Slider::thumbColourId,
-        juce::Colour::fromRGB(120, 235, 255));
+        juce::Colours::white);
 
     slider.setColour(
         juce::Slider::textBoxTextColourId,
         juce::Colours::white);
 
     slider.setColour(
-        juce::Slider::textBoxOutlineColourId,
-        juce::Colours::transparentBlack);
-}
+        juce::Slider::textBoxBackgroundColourId,
+        juce::Colour(0xff102b3b));
 
-// THEME SELECTION
+    addAndMakeVisible(slider);
+}
 
 void PURELUREAudioProcessorEditor::selectTheme(int themeIndex)
 {
     liquidWindow.setTheme(themeIndex);
 
-    oceanButton.setToggleState(themeIndex == 0, juce::dontSendNotification);
-    muddyButton.setToggleState(themeIndex == 1, juce::dontSendNotification);
-    riverButton.setToggleState(themeIndex == 2, juce::dontSendNotification);
-    lilyButton.setToggleState(themeIndex == 3, juce::dontSendNotification);
-}
+    oceanButton.setToggleState(
+        themeIndex == 0,
+        juce::dontSendNotification);
 
-// WAV LOADING
+    muddyButton.setToggleState(
+        themeIndex == 1,
+        juce::dontSendNotification);
+
+    riverButton.setToggleState(
+        themeIndex == 2,
+        juce::dontSendNotification);
+
+    lilyButton.setToggleState(
+        themeIndex == 3,
+        juce::dontSendNotification);
+
+    repaint();
+}
 
 void PURELUREAudioProcessorEditor::loadWavFile()
 {
@@ -430,7 +432,7 @@ void PURELUREAudioProcessorEditor::loadWavFile()
                 else
                 {
                     statusLabel.setText(
-                        "COULD NOT LOAD WAV",
+                        "SAMPLE LOAD FAILED",
                         juce::dontSendNotification);
                 }
             }
