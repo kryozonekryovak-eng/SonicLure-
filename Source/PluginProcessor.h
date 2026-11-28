@@ -1,32 +1,60 @@
+
 #pragma once
 
 #include <JuceHeader.h>
-#include "PluginProcessor.h"
+#include <atomic>
 
-class SonicLureAudioProcessorEditor
-    : public juce::AudioProcessorEditor
+class XLUREAudioProcessor : public juce::AudioProcessor
 {
 public:
-    explicit SonicLureAudioProcessorEditor(
-        SonicLureAudioProcessor& processor);
+    XLUREAudioProcessor();
+    ~XLUREAudioProcessor() override;
 
-    ~SonicLureAudioProcessorEditor() override = default;
+    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
+    void releaseResources() override;
 
-    void paint(juce::Graphics& g) override;
-    void resized() override;
+    bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
+
+    void processBlock(
+        juce::AudioBuffer<float>&,
+        juce::MidiBuffer&) override;
+
+    juce::AudioProcessorEditor* createEditor() override;
+    bool hasEditor() const override;
+
+    const juce::String getName() const override;
+
+    bool acceptsMidi() const override;
+    bool producesMidi() const override;
+    bool isMidiEffect() const override;
+
+    double getTailLengthSeconds() const override;
+
+    int getNumPrograms() override;
+    int getCurrentProgram() override;
+    void setCurrentProgram(int index) override;
+    const juce::String getProgramName(int index) override;
+    void changeProgramName(int index, const juce::String& newName) override;
+
+    void getStateInformation(juce::MemoryBlock& destData) override;
+    void setStateInformation(const void* data, int sizeInBytes) override;
+
+    bool loadSampleFile(const juce::File& file);
+    void playPreview();
+
+    juce::String getLoadedSampleName() const;
 
 private:
-    SonicLureAudioProcessor& audioProcessor;
+    juce::AudioFormatManager formatManager;
+    juce::Synthesiser sampler;
 
-    juce::TextButton loadButton { "LOAD WAV" };
-    juce::TextButton playButton { "PLAY" };
+    juce::CriticalSection samplerLock;
 
-    juce::Label titleLabel;
-    juce::Label subtitleLabel;
-    juce::Label sampleLabel;
+    juce::String loadedSampleName;
 
-    std::unique_ptr<juce::FileChooser> fileChooser;
+    std::atomic<bool> previewRequested { false };
+    int previewSamplesRemaining = 0;
+    double currentSampleRate = 44100.0;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(
-        SonicLureAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(XLUREAudioProcessor)
 };
