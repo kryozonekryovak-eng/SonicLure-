@@ -1,22 +1,24 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <atomic>
 
 class SonicLureAudioProcessor : public juce::AudioProcessor
 {
 public:
     SonicLureAudioProcessor();
-    ~SonicLureAudioProcessor() override;
+    ~SonicLureAudioProcessor() override = default;
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
     void processBlock(
-        juce::AudioBuffer<float>&,
-        juce::MidiBuffer&) override;
+        juce::AudioBuffer<float>& buffer,
+        juce::MidiBuffer& midiMessages) override;
 
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
+
     const juce::String getName() const override;
 
     bool acceptsMidi() const override;
@@ -34,17 +36,19 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-    void loadSampleBank(const juce::File& folder);
-    void clearSampleBank();
+    bool loadSampleFile(const juce::File& file);
+    void playPreview();
 
-    juce::AudioProcessorValueTreeState parameters;
+    juce::String getLoadedSampleName() const;
 
 private:
     juce::AudioFormatManager formatManager;
     juce::Synthesiser synthesiser;
 
-    static juce::AudioProcessorValueTreeState::ParameterLayout
-        createParameterLayout();
+    juce::String loadedSampleName;
+
+    std::atomic<bool> previewRequested { false };
+    int previewSamplesRemaining = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(
         SonicLureAudioProcessor)
