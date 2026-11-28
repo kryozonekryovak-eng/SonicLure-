@@ -32,13 +32,13 @@ SonicLureAudioProcessorEditor::SonicLureAudioProcessorEditor(
     : juce::AudioProcessorEditor(&p),
       audioProcessor(p)
 {
-    title.setText("SONICLURE", juce::dontSendNotification);
-    title.setFont(juce::Font(32.0f, juce::Font::bold));
+    title.setText("XLURE", juce::dontSendNotification);
+    title.setFont(juce::Font(36.0f, juce::Font::bold));
     title.setJustificationType(juce::Justification::centred);
     title.setColour(juce::Label::textColourId, amber);
     addAndMakeVisible(title);
 
-    subtitle.setText("BLACKOUT VIOLET  |  CAST YOUR SOUND",
+    subtitle.setText("KRYOZONE AUDIO  |  SAMPLE ROMPLER",
                      juce::dontSendNotification);
     subtitle.setJustificationType(juce::Justification::centred);
     subtitle.setColour(juce::Label::textColourId, orange);
@@ -138,7 +138,7 @@ void SonicLureAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(amber);
     g.setFont(juce::Font(13.0f, juce::Font::bold));
     g.drawText(
-        "SOUND ENGINE  /  OSCILLATORS  /  MOVEMENT",
+        "XLURE SOUND ENGINE  /  SAMPLE PLAYBACK",
         30, 105, getWidth() - 60, 22,
         juce::Justification::centredLeft);
 
