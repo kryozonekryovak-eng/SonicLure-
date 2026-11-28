@@ -1,4 +1,3 @@
-
 #include "PluginEditor.h"
 #include <cmath>
 
@@ -58,8 +57,7 @@ void PURELUREAudioProcessorEditor::LiquidWindow::timerCallback()
     repaint();
 }
 
-void PURELUREAudioProcessorEditor::LiquidWindow::paint(
-    juce::Graphics& g)
+void PURELUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat();
 
@@ -101,9 +99,7 @@ void PURELUREAudioProcessorEditor::LiquidWindow::paint(
     g.fillPath(liquid);
 
     g.setColour(highlightColour.withAlpha(0.45f));
-    g.strokePath(
-        liquid,
-        juce::PathStrokeType(1.5f));
+    g.strokePath(liquid, juce::PathStrokeType(1.5f));
 }
 
 PURELUREAudioProcessorEditor::PURELUREAudioProcessorEditor(
@@ -118,9 +114,7 @@ PURELUREAudioProcessorEditor::PURELUREAudioProcessorEditor(
 
     titleLabel.setText("PURELURE", juce::dontSendNotification);
     titleLabel.setFont(juce::Font(34.0f, juce::Font::bold));
-    titleLabel.setColour(
-        juce::Label::textColourId,
-        juce::Colours::white);
+    titleLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     titleLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(titleLabel);
 
@@ -134,18 +128,14 @@ PURELUREAudioProcessorEditor::PURELUREAudioProcessorEditor(
     subtitleLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(subtitleLabel);
 
-    sampleLabel.setText(
-        "NO SAMPLE LOADED",
-        juce::dontSendNotification);
+    sampleLabel.setText("NO SAMPLE LOADED", juce::dontSendNotification);
     sampleLabel.setColour(
         juce::Label::textColourId,
         juce::Colours::white);
     sampleLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(sampleLabel);
 
-    statusLabel.setText(
-        "READY",
-        juce::dontSendNotification);
+    statusLabel.setText("READY", juce::dontSendNotification);
     statusLabel.setColour(
         juce::Label::textColourId,
         juce::Colours::lightgreen);
@@ -176,9 +166,7 @@ PURELUREAudioProcessorEditor::PURELUREAudioProcessorEditor(
     playButton.onClick = [this]
     {
         audioProcessor.playPreview();
-        statusLabel.setText(
-            "PREVIEW PLAYING",
-            juce::dontSendNotification);
+        statusLabel.setText("PREVIEW PLAYING", juce::dontSendNotification);
     };
 
     setupSlider(cutoffSlider, cutoffLabel, "FILTER CUTOFF");
@@ -233,20 +221,12 @@ void PURELUREAudioProcessorEditor::resized()
     area.removeFromTop(18);
 
     auto themeArea = area.removeFromTop(42);
-
     const int themeWidth = themeArea.getWidth() / 4;
 
-    oceanButton.setBounds(
-        themeArea.removeFromLeft(themeWidth).reduced(4));
-
-    muddyButton.setBounds(
-        themeArea.removeFromLeft(themeWidth).reduced(4));
-
-    riverButton.setBounds(
-        themeArea.removeFromLeft(themeWidth).reduced(4));
-
-    lilyButton.setBounds(
-        themeArea.reduced(4));
+    oceanButton.setBounds(themeArea.removeFromLeft(themeWidth).reduced(4));
+    muddyButton.setBounds(themeArea.removeFromLeft(themeWidth).reduced(4));
+    riverButton.setBounds(themeArea.removeFromLeft(themeWidth).reduced(4));
+    lilyButton.setBounds(themeArea.reduced(4));
 
     area.removeFromTop(28);
 
@@ -258,56 +238,36 @@ void PURELUREAudioProcessorEditor::resized()
     auto sampleButtons = area.removeFromTop(44);
 
     loadButton.setBounds(
-        sampleButtons.removeFromLeft(
-            sampleButtons.getWidth() / 2).reduced(5));
-
+        sampleButtons.removeFromLeft(sampleButtons.getWidth() / 2).reduced(5));
     playButton.setBounds(sampleButtons.reduced(5));
 
     area.removeFromTop(30);
 
     auto controls = area.removeFromTop(210);
-
     const int controlWidth = controls.getWidth() / 3;
 
     cutoffLabel.setBounds(
-        controls.getX(),
-        controls.getY(),
-        controlWidth,
-        24);
+        controls.getX(), controls.getY(), controlWidth, 24);
 
     cutoffSlider.setBounds(
-        controls.getX(),
-        controls.getY() + 24,
-        controlWidth,
-        170);
+        controls.getX(), controls.getY() + 24, controlWidth, 170);
 
     resonanceLabel.setBounds(
-        controls.getX() + controlWidth,
-        controls.getY(),
-        controlWidth,
-        24);
+        controls.getX() + controlWidth, controls.getY(), controlWidth, 24);
 
     resonanceSlider.setBounds(
-        controls.getX() + controlWidth,
-        controls.getY() + 24,
-        controlWidth,
-        170);
+        controls.getX() + controlWidth, controls.getY() + 24,
+        controlWidth, 170);
 
     masterLabel.setBounds(
-        controls.getX() + controlWidth * 2,
-        controls.getY(),
-        controlWidth,
-        24);
+        controls.getX() + controlWidth * 2, controls.getY(), controlWidth, 24);
 
     masterSlider.setBounds(
-        controls.getX() + controlWidth * 2,
-        controls.getY() + 24,
-        controlWidth,
-        170);
+        controls.getX() + controlWidth * 2, controls.getY() + 24,
+        controlWidth, 170);
 }
 
-void PURELUREAudioProcessorEditor::styleButton(
-    juce::TextButton& button)
+void PURELUREAudioProcessorEditor::styleButton(juce::TextButton& button)
 {
     button.setColour(
         juce::TextButton::buttonColourId,
@@ -325,10 +285,6 @@ void PURELUREAudioProcessorEditor::styleButton(
         juce::TextButton::textColourOnId,
         juce::Colours::white);
 
-    button.setColour(
-        juce::TextButton::buttonColourId,
-        juce::Colour(0xff123c50));
-
     button.setConnectedEdges(0);
 }
 
@@ -339,22 +295,12 @@ void PURELUREAudioProcessorEditor::setupSlider(
 {
     label.setText(name, juce::dontSendNotification);
     label.setJustificationType(juce::Justification::centred);
-    label.setColour(
-        juce::Label::textColourId,
-        juce::Colours::white);
+    label.setColour(juce::Label::textColourId, juce::Colours::white);
     label.setFont(juce::Font(12.0f, juce::Font::bold));
-
     addAndMakeVisible(label);
 
-    slider.setSliderStyle(
-        juce::Slider::RotaryHorizontalVerticalDrag);
-
-    slider.setTextBoxStyle(
-        juce::Slider::TextBoxBelow,
-        false,
-        70,
-        22);
-
+    slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 70, 22);
     slider.setRange(0.0, 1.0, 0.001);
 
     slider.setColour(
@@ -365,10 +311,7 @@ void PURELUREAudioProcessorEditor::setupSlider(
         juce::Slider::rotarySliderOutlineColourId,
         juce::Colour(0xff31566b));
 
-    slider.setColour(
-        juce::Slider::thumbColourId,
-        juce::Colours::white);
-
+    slider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
     slider.setColour(
         juce::Slider::textBoxTextColourId,
         juce::Colours::white);
@@ -384,21 +327,10 @@ void PURELUREAudioProcessorEditor::selectTheme(int themeIndex)
 {
     liquidWindow.setTheme(themeIndex);
 
-    oceanButton.setToggleState(
-        themeIndex == 0,
-        juce::dontSendNotification);
-
-    muddyButton.setToggleState(
-        themeIndex == 1,
-        juce::dontSendNotification);
-
-    riverButton.setToggleState(
-        themeIndex == 2,
-        juce::dontSendNotification);
-
-    lilyButton.setToggleState(
-        themeIndex == 3,
-        juce::dontSendNotification);
+    oceanButton.setToggleState(themeIndex == 0, juce::dontSendNotification);
+    muddyButton.setToggleState(themeIndex == 1, juce::dontSendNotification);
+    riverButton.setToggleState(themeIndex == 2, juce::dontSendNotification);
+    lilyButton.setToggleState(themeIndex == 3, juce::dontSendNotification);
 
     repaint();
 }
