@@ -1,5 +1,5 @@
 
-#include "PluginProcessor.h"
+#include "PluginEditor.h"
 #include <cmath>
 
 namespace
@@ -39,7 +39,8 @@ void XLUREAudioProcessor::releaseResources()
         resetVoice(voice);
 }
 
-bool XLUREAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
+bool XLUREAudioProcessor::isBusesLayoutSupported(
+    const BusesLayout& layouts) const
 {
     const auto output = layouts.getMainOutputChannelSet();
 
@@ -56,13 +57,12 @@ void XLUREAudioProcessor::processBlock(
     const int numberOfSamples = buffer.getNumSamples();
     buffer.clear();
 
-    // Build a separate MIDI stream for the WAV sampler.
     juce::MidiBuffer samplerMidi;
     samplerMidi.addEvents(midiMessages, 0, numberOfSamples, 0);
 
-    // The preview button plays a short middle-C sample.
     if (previewRequested.exchange(false))
-        previewSamplesRemaining = static_cast<int>(currentSampleRate * 0.5);
+        previewSamplesRemaining =
+            static_cast<int>(currentSampleRate * 0.5);
 
     if (previewSamplesRemaining > 0 && numberOfSamples > 0)
     {
@@ -82,14 +82,12 @@ void XLUREAudioProcessor::processBlock(
         }
     }
 
-    // Render the independent WAV sampler.
     {
         const juce::ScopedLock lock(samplerLock);
         sampler.renderNextBlock(
             buffer, samplerMidi, 0, numberOfSamples);
     }
 
-    // Render the subtractive/modal synth from incoming MIDI.
     juce::MidiBuffer::Iterator midiIterator(midiMessages);
     juce::MidiMessage midiMessage;
     int midiPosition = 0;
@@ -110,7 +108,9 @@ void XLUREAudioProcessor::processBlock(
         const float targetMorph = morphX.load();
         const float targetBrightness = morphY.load();
 
-        smoothedMorph += (targetMorph - smoothedMorph) * 0.0025f;
+        smoothedMorph +=
+            (targetMorph - smoothedMorph) * 0.0025f;
+
         smoothedBrightness +=
             (targetBrightness - smoothedBrightness) * 0.0025f;
 
@@ -165,7 +165,6 @@ void XLUREAudioProcessor::startVoice(int midiNote, float velocity)
     resetVoice(voice);
 
     voice.active = true;
-    voice.releasing = false;
     voice.midiNote = midiNote;
     voice.velocity = juce::jlimit(0.0f, 1.0f, velocity);
 
@@ -188,11 +187,10 @@ void XLUREAudioProcessor::stopVoice(int midiNote)
         {
             voice.releasing = true;
 
-            const float releaseSeconds = 0.30f;
             voice.releaseRate = juce::jmax(
                 0.000001f,
                 voice.envelope /
-                static_cast<float>(currentSampleRate * releaseSeconds));
+                static_cast<float>(currentSampleRate * 0.30));
         }
     }
 }
@@ -205,7 +203,6 @@ int XLUREAudioProcessor::findFreeVoice() const
             return i;
     }
 
-    // Steal the first voice if all voices are occupied.
     return 0;
 }
 
@@ -233,21 +230,17 @@ float XLUREAudioProcessor::renderVoice(XLUREVoice& voice)
         }
     }
 
-    const float brightness = juce::jlimit(
-        0.0f, 1.0f, smoothedBrightness);
-
-    const float resonance = filterResonance.load();
+    const float brightness =
+        juce::jlimit(0.0f, 1.0f, smoothedBrightness);
 
     const float subtractive = renderSubtractive(
-        voice, brightness, resonance);
+        voice, brightness, filterResonance.load());
 
-    const float modal = renderModal(
-        voice, brightness);
+    const float modal = renderModal(voice, brightness);
 
-    const float morph = juce::jlimit(
-        0.0f, 1.0f, smoothedMorph);
+    const float morph =
+        juce::jlimit(0.0f, 1.0f, smoothedMorph);
 
-    // Equal-power crossfade between the two sound engines.
     const float subtractiveGain =
         std::cos(morph * juce::MathConstants<float>::halfPi);
 
@@ -255,10 +248,10 @@ float XLUREAudioProcessor::renderVoice(XLUREVoice& voice)
         std::sin(morph * juce::MathConstants<float>::halfPi);
 
     const float output =
-        subtractive * subtractiveGain
-        + modal * modalGain;
+        subtractive * subtractiveGain + modal * modalGain;
 
-    return safeFloat(output * voice.envelope * voice.velocity * 0.22f);
+    return safeFloat(
+        output * voice.envelope * voice.velocity * 0.22f);
 }
 
 float XLUREAudioProcessor::renderSubtractive(
@@ -269,12 +262,8 @@ float XLUREAudioProcessor::renderSubtractive(
     const double frequency =
         juce::MidiMessage::getMidiNoteInHertz(voice.midiNote);
 
-    const double incrementOne = frequency / currentSampleRate;
-    const double incrementTwo =
-        (frequency * 1.003) / currentSampleRate;
-
-    voice.phaseOne += incrementOne;
-    voice.phaseTwo += incrementTwo;
+    voice.phaseOne += frequency / currentSampleRate;
+    voice.phaseTwo += (frequency * 1.003) / currentSampleRate;
 
     if (voice.phaseOne >= 1.0)
         voice.phaseOne -= std::floor(voice.phaseOne);
@@ -300,23 +289,17 @@ float XLUREAudioProcessor::renderSubtractive(
         + pulse * 0.18f
         + sine * 0.12f;
 
-    const float cutoffControl =
-        filterCutoff.load();
-
     const float cutoffHz =
-        120.0f + cutoffControl * (16000.0f - 120.0f);
-
-    const float brightnessMultiplier =
-        0.18f + brightness * 0.82f;
+        120.0f + filterCutoff.load() * 15880.0f;
 
     const float effectiveCutoff =
-        juce::jlimit(80.0f, 18000.0f,
-            cutoffHz * brightnessMultiplier);
+        juce::jlimit(
+            80.0f, 18000.0f,
+            cutoffHz * (0.18f + brightness * 0.82f));
 
     const float coefficient =
         1.0f - std::exp(
-            -static_cast<float>(twoPi)
-            * effectiveCutoff
+            -static_cast<float>(twoPi) * effectiveCutoff
             / static_cast<float>(currentSampleRate));
 
     const float feedback =
@@ -354,13 +337,8 @@ float XLUREAudioProcessor::renderModal(
     {
         const size_t index = static_cast<size_t>(i);
 
-        const double frequency =
-            fundamental * ratios[index];
-
-        const double increment =
-            frequency / currentSampleRate;
-
-        voice.modalPhases[index] += increment;
+        voice.modalPhases[index] +=
+            fundamental * ratios[index] / currentSampleRate;
 
         if (voice.modalPhases[index] >= 1.0)
             voice.modalPhases[index] -=
@@ -393,17 +371,13 @@ void XLUREAudioProcessor::resetVoice(XLUREVoice& voice)
     voice.releasing = false;
     voice.midiNote = 60;
     voice.velocity = 0.0f;
-
     voice.phaseOne = 0.0;
     voice.phaseTwo = 0.0;
-
     voice.envelope = 0.0f;
     voice.releaseRate = 0.0f;
     voice.filterState = 0.0f;
-
     voice.modalPhases.fill(0.0);
     voice.modalLevels.fill(0.0f);
-
     voice.noiseState = 0.0f;
 }
 
@@ -493,7 +467,7 @@ juce::String XLUREAudioProcessor::getLoadedSampleName() const
 
 juce::AudioProcessorEditor* XLUREAudioProcessor::createEditor()
 {
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new XLUREAudioProcessorEditor(*this);
 }
 
 bool XLUREAudioProcessor::hasEditor() const
