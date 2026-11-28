@@ -38,7 +38,6 @@ public:
     void playPreview();
     juce::String getLoadedSampleName() const;
 
-    // WAV sample start and end
     void setSampleStart(float value);
     void setSampleEnd(float value);
     float getSampleStart() const;
@@ -71,20 +70,31 @@ private:
         float noiseState = 0.0f;
     };
 
+    struct SampleVoice
+    {
+        bool active = false;
+        bool preview = false;
+        int midiNote = 60;
+        float velocity = 0.0f;
+        double position = 0.0;
+        double increment = 1.0;
+        int previewSamplesRemaining = 0;
+    };
+
     static constexpr int maximumVoices = 16;
     static constexpr int numberOfModes = 8;
 
     std::array<XLUREVoice, maximumVoices> voices;
+    std::array<SampleVoice, maximumVoices> sampleVoices;
 
     juce::AudioFormatManager formatManager;
-    juce::Synthesiser sampler;
+    juce::AudioBuffer<float> sampleBuffer;
     juce::CriticalSection samplerLock;
     juce::String loadedSampleName;
+    double loadedSampleRate = 44100.0;
 
     std::atomic<bool> previewRequested { false };
-    int previewSamplesRemaining = 0;
 
-    // Sample positions are percentages from 0.0 to 1.0
     std::atomic<float> sampleStart { 0.0f };
     std::atomic<float> sampleEnd { 1.0f };
 
@@ -104,6 +114,11 @@ private:
     void startVoice(int midiNote, float velocity);
     void stopVoice(int midiNote);
     int findFreeVoice() const;
+
+    void startSampleVoice(int midiNote, float velocity, bool preview = false);
+    void stopSampleVoice(int midiNote);
+    float renderSampleVoice(SampleVoice& voice, int channel);
+    void resetSampleVoice(SampleVoice& voice);
 
     float renderVoice(XLUREVoice& voice);
     float renderSubtractive(XLUREVoice& voice, float brightness, float resonance);
