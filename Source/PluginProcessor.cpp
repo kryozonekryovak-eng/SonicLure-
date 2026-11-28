@@ -2,6 +2,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include <cmath>
+#include <utility>
 
 namespace
 {
@@ -13,20 +14,16 @@ namespace
     }
 }
 
-//==============================================================================
-
-XLUREAudioProcessor::XLUREAudioProcessor()
+PURELUREAudioProcessor::PURELUREAudioProcessor()
     : AudioProcessor(BusesProperties()
         .withOutput("Output", juce::AudioChannelSet::stereo(), true))
 {
     formatManager.registerBasicFormats();
 }
 
-XLUREAudioProcessor::~XLUREAudioProcessor() = default;
+PURELUREAudioProcessor::~PURELUREAudioProcessor() = default;
 
-//==============================================================================
-
-void XLUREAudioProcessor::prepareToPlay(double sampleRate, int)
+void PURELUREAudioProcessor::prepareToPlay(double sampleRate, int)
 {
     currentSampleRate = sampleRate > 0.0 ? sampleRate : 44100.0;
 
@@ -37,19 +34,17 @@ void XLUREAudioProcessor::prepareToPlay(double sampleRate, int)
         resetSampleVoice(voice);
 }
 
-void XLUREAudioProcessor::releaseResources()
+void PURELUREAudioProcessor::releaseResources()
 {
 }
 
-bool XLUREAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
+bool PURELUREAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
     return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo()
         || layouts.getMainOutputChannelSet() == juce::AudioChannelSet::mono();
 }
 
-//==============================================================================
-
-void XLUREAudioProcessor::processBlock(
+void PURELUREAudioProcessor::processBlock(
     juce::AudioBuffer<float>& buffer,
     juce::MidiBuffer& midiMessages)
 {
@@ -60,19 +55,14 @@ void XLUREAudioProcessor::processBlock(
     for (const auto metadata : midiMessages)
         handleMidiMessage(metadata.getMessage());
 
-    if (previewRequested.exchange(false))
-        startSampleVoice(60, 1.0f, true);
-
     const int numSamples = buffer.getNumSamples();
     const int numChannels = buffer.getNumChannels();
 
     juce::ScopedLock lock(samplerLock);
 
-    const float x = morphX.load();
-    const float y = morphY.load();
-    const float cutoff = filterCutoff.load();
-    const float resonance = filterResonance.load();
-    const float modal = modalAmount.load();
+    if (previewRequested.exchange(false))
+        startSampleVoice(60, 1.0f, true);
+
     const float master = masterLevel.load();
 
     for (int sample = 0; sample < numSamples; ++sample)
@@ -102,9 +92,7 @@ void XLUREAudioProcessor::processBlock(
     }
 }
 
-//==============================================================================
-
-void XLUREAudioProcessor::handleMidiMessage(const juce::MidiMessage& message)
+void PURELUREAudioProcessor::handleMidiMessage(const juce::MidiMessage& message)
 {
     if (message.isNoteOn())
     {
@@ -114,9 +102,6 @@ void XLUREAudioProcessor::handleMidiMessage(const juce::MidiMessage& message)
     else if (message.isNoteOff())
     {
         stopVoice(message.getNoteNumber());
-
-        // Sample playback is one-shot.
-        // MIDI note-off does not interrupt the WAV.
     }
     else if (message.isAllNotesOff() || message.isAllSoundOff())
     {
@@ -128,9 +113,7 @@ void XLUREAudioProcessor::handleMidiMessage(const juce::MidiMessage& message)
     }
 }
 
-//==============================================================================
-
-void XLUREAudioProcessor::startVoice(int midiNote, float velocity)
+void PURELUREAudioProcessor::startVoice(int midiNote, float velocity)
 {
     const int index = findFreeVoice();
 
@@ -147,7 +130,7 @@ void XLUREAudioProcessor::startVoice(int midiNote, float velocity)
     voice.envelope = 0.0f;
 }
 
-void XLUREAudioProcessor::stopVoice(int midiNote)
+void PURELUREAudioProcessor::stopVoice(int midiNote)
 {
     for (auto& voice : voices)
     {
@@ -160,7 +143,7 @@ void XLUREAudioProcessor::stopVoice(int midiNote)
     }
 }
 
-int XLUREAudioProcessor::findFreeVoice() const
+int PURELUREAudioProcessor::findFreeVoice() const
 {
     for (int i = 0; i < maximumVoices; ++i)
     {
@@ -171,10 +154,9 @@ int XLUREAudioProcessor::findFreeVoice() const
     return 0;
 }
 
-//==============================================================================
 // WAV SAMPLE ENGINE
 
-bool XLUREAudioProcessor::loadSampleFile(const juce::File& file)
+bool PURELUREAudioProcessor::loadSampleFile(const juce::File& file)
 {
     if (!file.existsAsFile())
         return false;
@@ -211,48 +193,46 @@ bool XLUREAudioProcessor::loadSampleFile(const juce::File& file)
     return true;
 }
 
-void XLUREAudioProcessor::playPreview()
+void PURELUREAudioProcessor::playPreview()
 {
     previewRequested.store(true);
 }
 
-juce::String XLUREAudioProcessor::getLoadedSampleName() const
+juce::String PURELUREAudioProcessor::getLoadedSampleName() const
 {
     const juce::ScopedLock lock(samplerLock);
     return loadedSampleName;
 }
 
-void XLUREAudioProcessor::setSampleStart(float value)
+void PURELUREAudioProcessor::setSampleStart(float value)
 {
     value = juce::jlimit(0.0f, 0.999f, safeFloat(value));
-
     sampleStart.store(juce::jmin(value, sampleEnd.load() - 0.001f));
 }
 
-void XLUREAudioProcessor::setSampleEnd(float value)
+void PURELUREAudioProcessor::setSampleEnd(float value)
 {
     value = juce::jlimit(0.001f, 1.0f, safeFloat(value));
-
     sampleEnd.store(juce::jmax(value, sampleStart.load() + 0.001f));
 }
 
-float XLUREAudioProcessor::getSampleStart() const
+float PURELUREAudioProcessor::getSampleStart() const
 {
     return sampleStart.load();
 }
 
-float XLUREAudioProcessor::getSampleEnd() const
+float PURELUREAudioProcessor::getSampleEnd() const
 {
     return sampleEnd.load();
 }
 
-void XLUREAudioProcessor::resetSampleRange()
+void PURELUREAudioProcessor::resetSampleRange()
 {
     sampleStart.store(0.0f);
     sampleEnd.store(1.0f);
 }
 
-void XLUREAudioProcessor::startSampleVoice(
+void PURELUREAudioProcessor::startSampleVoice(
     int midiNote,
     float velocity,
     bool preview)
@@ -292,7 +272,7 @@ void XLUREAudioProcessor::startSampleVoice(
     voice.increment = (loadedSampleRate / currentSampleRate) * pitch;
 }
 
-void XLUREAudioProcessor::stopSampleVoice(int midiNote)
+void PURELUREAudioProcessor::stopSampleVoice(int midiNote)
 {
     for (auto& voice : sampleVoices)
     {
@@ -301,7 +281,7 @@ void XLUREAudioProcessor::stopSampleVoice(int midiNote)
     }
 }
 
-float XLUREAudioProcessor::renderSampleVoice(
+float PURELUREAudioProcessor::renderSampleVoice(
     SampleVoice& voice,
     int channel)
 {
@@ -337,7 +317,6 @@ float XLUREAudioProcessor::renderSampleVoice(
     const float output =
         (first + (second - first) * fraction) * voice.velocity;
 
-    // Advance once per output frame, after the final channel.
     if (channel == getTotalNumOutputChannels() - 1)
     {
         voice.position += voice.increment;
@@ -349,7 +328,7 @@ float XLUREAudioProcessor::renderSampleVoice(
     return output;
 }
 
-void XLUREAudioProcessor::resetSampleVoice(SampleVoice& voice)
+void PURELUREAudioProcessor::resetSampleVoice(SampleVoice& voice)
 {
     voice.active = false;
     voice.preview = false;
@@ -360,10 +339,9 @@ void XLUREAudioProcessor::resetSampleVoice(SampleVoice& voice)
     voice.previewSamplesRemaining = 0;
 }
 
-//==============================================================================
 // SYNTH ENGINE
 
-float XLUREAudioProcessor::renderVoice(XLUREVoice& voice)
+float PURELUREAudioProcessor::renderVoice(XLUREVoice& voice)
 {
     if (!voice.active)
         return 0.0f;
@@ -373,8 +351,7 @@ float XLUREAudioProcessor::renderVoice(XLUREVoice& voice)
 
     if (!voice.releasing)
     {
-        voice.envelope = juce::jmin(
-            1.0f, voice.envelope + attackRate);
+        voice.envelope = juce::jmin(1.0f, voice.envelope + attackRate);
     }
     else
     {
@@ -415,7 +392,7 @@ float XLUREAudioProcessor::renderVoice(XLUREVoice& voice)
         * 0.25f;
 }
 
-float XLUREAudioProcessor::renderSubtractive(
+float PURELUREAudioProcessor::renderSubtractive(
     XLUREVoice& voice,
     float brightness,
     float resonance)
@@ -445,7 +422,7 @@ float XLUREAudioProcessor::renderSubtractive(
         std::sin(static_cast<float>(voice.phaseOne));
 
     const float oscillator =
-        (sawOne * 0.4f + sawTwo * 0.4f + pulse * 0.2f);
+        sawOne * 0.4f + sawTwo * 0.4f + pulse * 0.2f;
 
     const float cutoff =
         80.0f * std::pow(200.0f, filterCutoff.load());
@@ -466,7 +443,7 @@ float XLUREAudioProcessor::renderSubtractive(
     return voice.filterState;
 }
 
-float XLUREAudioProcessor::renderModal(
+float PURELUREAudioProcessor::renderModal(
     XLUREVoice& voice,
     float brightness)
 {
@@ -482,9 +459,7 @@ float XLUREAudioProcessor::renderModal(
     for (int i = 0; i < numberOfModes; ++i)
     {
         const auto index = static_cast<size_t>(i);
-
-        const double frequency =
-            baseFrequency * ratios[index];
+        const double frequency = baseFrequency * ratios[index];
 
         voice.modalPhases[index] +=
             twoPi * frequency / currentSampleRate;
@@ -503,7 +478,7 @@ float XLUREAudioProcessor::renderModal(
     return output / 3.0f;
 }
 
-void XLUREAudioProcessor::resetVoice(XLUREVoice& voice)
+void PURELUREAudioProcessor::resetVoice(XLUREVoice& voice)
 {
     voice.active = false;
     voice.releasing = false;
@@ -519,103 +494,100 @@ void XLUREAudioProcessor::resetVoice(XLUREVoice& voice)
     voice.noiseState = 0.0f;
 }
 
-//==============================================================================
 // CONTROLS
 
-void XLUREAudioProcessor::setMorphPosition(float x, float y)
+void PURELUREAudioProcessor::setMorphPosition(float x, float y)
 {
     morphX.store(juce::jlimit(0.0f, 1.0f, safeFloat(x)));
     morphY.store(juce::jlimit(0.0f, 1.0f, safeFloat(y)));
 }
 
-float XLUREAudioProcessor::getMorphX() const
+float PURELUREAudioProcessor::getMorphX() const
 {
     return morphX.load();
 }
 
-float XLUREAudioProcessor::getMorphY() const
+float PURELUREAudioProcessor::getMorphY() const
 {
     return morphY.load();
 }
 
-void XLUREAudioProcessor::setFilterCutoff(float value)
+void PURELUREAudioProcessor::setFilterCutoff(float value)
 {
     filterCutoff.store(juce::jlimit(0.0f, 1.0f, safeFloat(value)));
 }
 
-void XLUREAudioProcessor::setFilterResonance(float value)
+void PURELUREAudioProcessor::setFilterResonance(float value)
 {
     filterResonance.store(juce::jlimit(0.0f, 1.0f, safeFloat(value)));
 }
 
-void XLUREAudioProcessor::setModalAmount(float value)
+void PURELUREAudioProcessor::setModalAmount(float value)
 {
     modalAmount.store(juce::jlimit(0.0f, 1.0f, safeFloat(value)));
 }
 
-void XLUREAudioProcessor::setMasterLevel(float value)
+void PURELUREAudioProcessor::setMasterLevel(float value)
 {
     masterLevel.store(juce::jlimit(0.0f, 1.0f, safeFloat(value)));
 }
 
-//==============================================================================
 // PLUGIN INFORMATION
 
-const juce::String XLUREAudioProcessor::getName() const
+const juce::String PURELUREAudioProcessor::getName() const
 {
-    return "XLURE";
+    return "PURELURE";
 }
 
-bool XLUREAudioProcessor::acceptsMidi() const
+bool PURELUREAudioProcessor::acceptsMidi() const
 {
     return true;
 }
 
-bool XLUREAudioProcessor::producesMidi() const
+bool PURELUREAudioProcessor::producesMidi() const
 {
     return false;
 }
 
-bool XLUREAudioProcessor::isMidiEffect() const
+bool PURELUREAudioProcessor::isMidiEffect() const
 {
     return false;
 }
 
-double XLUREAudioProcessor::getTailLengthSeconds() const
+double PURELUREAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int XLUREAudioProcessor::getNumPrograms()
+int PURELUREAudioProcessor::getNumPrograms()
 {
     return 1;
 }
 
-int XLUREAudioProcessor::getCurrentProgram()
+int PURELUREAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void XLUREAudioProcessor::setCurrentProgram(int)
+void PURELUREAudioProcessor::setCurrentProgram(int)
 {
 }
 
-const juce::String XLUREAudioProcessor::getProgramName(int)
+const juce::String PURELUREAudioProcessor::getProgramName(int)
 {
     return {};
 }
 
-void XLUREAudioProcessor::changeProgramName(int, const juce::String&)
+void PURELUREAudioProcessor::changeProgramName(int, const juce::String&)
 {
 }
 
-//==============================================================================
 // STATE
 
-void XLUREAudioProcessor::getStateInformation(
+void PURELUREAudioProcessor::getStateInformation(
     juce::MemoryBlock& destData)
 {
-    juce::XmlElement xml("XLURE_STATE");
+    juce::XmlElement xml("PURELURE_STATE");
 
     xml.setAttribute("morphX", morphX.load());
     xml.setAttribute("morphY", morphY.load());
@@ -629,14 +601,14 @@ void XLUREAudioProcessor::getStateInformation(
     copyXmlToBinary(xml, destData);
 }
 
-void XLUREAudioProcessor::setStateInformation(
+void PURELUREAudioProcessor::setStateInformation(
     const void* data,
     int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xml(
         getXmlFromBinary(data, sizeInBytes));
 
-    if (xml == nullptr || !xml->hasTagName("XLURE_STATE"))
+    if (xml == nullptr || !xml->hasTagName("PURELURE_STATE"))
         return;
 
     setMorphPosition(
@@ -662,21 +634,17 @@ void XLUREAudioProcessor::setStateInformation(
         static_cast<float>(xml->getDoubleAttribute("sampleEnd", 1.0)));
 }
 
-//==============================================================================
-
-juce::AudioProcessorEditor* XLUREAudioProcessor::createEditor()
+juce::AudioProcessorEditor* PURELUREAudioProcessor::createEditor()
 {
-    return new XLUREAudioProcessorEditor(*this);
+    return new PURELUREAudioProcessorEditor(*this);
 }
 
-bool XLUREAudioProcessor::hasEditor() const
+bool PURELUREAudioProcessor::hasEditor() const
 {
     return true;
 }
 
-//==============================================================================
-
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new XLUREAudioProcessor();
+    return new PURELUREAudioProcessor();
 }
