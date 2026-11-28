@@ -2,187 +2,150 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-namespace
-{
-    const juce::Colour background(10, 8, 14);
-    const juce::Colour panel(30, 22, 35);
-    const juce::Colour orange(145, 45, 130);
-    const juce::Colour amber(190, 105, 205);
-    const juce::Colour cream(240, 225, 245);
-
-    const std::array<const char*, 14> parameterIDs =
-    {
-        "ATTACK", "RELEASE", "BRIGHTNESS", "DRIFT",
-        "TIDE", "OUTPUT", "OSC1_LEVEL", "OSC2_LEVEL",
-        "OSC3_LEVEL", "OSC2_DETUNE", "OSC3_DETUNE",
-        "SUB_LEVEL", "NOISE_LEVEL", "FILTER_CUTOFF"
-    };
-
-    const std::array<const char*, 14> controlNames =
-    {
-        "ATTACK", "RELEASE", "BRIGHTNESS", "DRIFT",
-        "TIDE", "MASTER", "OSC 1 LEVEL", "OSC 2 LEVEL",
-        "OSC 3 LEVEL", "OSC 2 DETUNE", "OSC 3 DETUNE",
-        "SUB BASS", "NOISE", "FILTER CUTOFF"
-    };
-}
-
-SonicLureAudioProcessorEditor::SonicLureAudioProcessorEditor(
-    SonicLureAudioProcessor& p)
-    : juce::AudioProcessorEditor(&p),
+XLUREAudioProcessorEditor::XLUREAudioProcessorEditor(
+    XLUREAudioProcessor& p)
+    : AudioProcessorEditor(&p),
       audioProcessor(p)
 {
-    title.setText("XLURE", juce::dontSendNotification);
-    title.setFont(juce::Font(36.0f, juce::Font::bold));
-    title.setJustificationType(juce::Justification::centred);
-    title.setColour(juce::Label::textColourId, amber);
-    addAndMakeVisible(title);
+    setSize(520, 330);
 
-    subtitle.setText("KRYOZONE AUDIO  |  SAMPLE ROMPLER",
-                     juce::dontSendNotification);
-    subtitle.setJustificationType(juce::Justification::centred);
-    subtitle.setColour(juce::Label::textColourId, orange);
-    addAndMakeVisible(subtitle);
+    titleLabel.setText("XLURE", juce::dontSendNotification);
+    titleLabel.setFont(juce::Font(32.0f, juce::Font::bold));
+    titleLabel.setJustificationType(juce::Justification::centred);
+    titleLabel.setColour(
+        juce::Label::textColourId,
+        juce::Colour(0xffe9f4ff));
+    addAndMakeVisible(titleLabel);
 
-    for (int i = 0; i < controlCount; ++i)
+    loadButton.setColour(
+        juce::TextButton::buttonColourId,
+        juce::Colour(0xff176b91));
+    loadButton.setColour(
+        juce::TextButton::textColourOffId,
+        juce::Colours::white);
+    loadButton.onClick = [this]
     {
-        setupSlider(i, controlNames[static_cast<size_t>(i)]);
+        loadWavFile();
+    };
+    addAndMakeVisible(loadButton);
 
-        sliderAttachments[static_cast<size_t>(i)] =
-            std::make_unique<SliderAttachment>(
-                audioProcessor.parameters,
-                parameterIDs[static_cast<size_t>(i)],
-                sliders[static_cast<size_t>(i)]);
-    }
+    playButton.setColour(
+        juce::TextButton::buttonColourId,
+        juce::Colour(0xff23875e));
+    playButton.setColour(
+        juce::TextButton::textColourOffId,
+        juce::Colours::white);
+    playButton.onClick = [this]
+    {
+        audioProcessor.playPreview();
+    };
+    addAndMakeVisible(playButton);
 
-    waveform.addItem("Sine", 1);
-    waveform.addItem("Saw", 2);
-    waveform.addItem("Square", 3);
+    sampleLabel.setText(
+        "No WAV sample loaded",
+        juce::dontSendNotification);
+    sampleLabel.setJustificationType(
+        juce::Justification::centred);
+    sampleLabel.setColour(
+        juce::Label::textColourId,
+        juce::Colour(0xffc5d5e5));
+    addAndMakeVisible(sampleLabel);
 
-    waveform.setColour(
-        juce::ComboBox::backgroundColourId, panel);
-    waveform.setColour(
-        juce::ComboBox::textColourId, amber);
-    waveform.setColour(
-        juce::ComboBox::outlineColourId, orange);
-
-    addAndMakeVisible(waveform);
-
-    waveformLabel.setText("WAVEFORM", juce::dontSendNotification);
-    waveformLabel.setJustificationType(juce::Justification::centred);
-    waveformLabel.setColour(
-        juce::Label::textColourId, cream);
-    addAndMakeVisible(waveformLabel);
-
-    waveformAttachment =
-        std::make_unique<
-            juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
-                audioProcessor.parameters, "WAVEFORM", waveform);
-
-    setSize(900, 700);
+    statusLabel.setText(
+        "Load a WAV sample to begin",
+        juce::dontSendNotification);
+    statusLabel.setJustificationType(
+        juce::Justification::centred);
+    statusLabel.setColour(
+        juce::Label::textColourId,
+        juce::Colour(0xff91a8bd));
+    addAndMakeVisible(statusLabel);
 }
 
-SonicLureAudioProcessorEditor::~SonicLureAudioProcessorEditor() = default;
-
-void SonicLureAudioProcessorEditor::setupSlider(
-    int index,
-    const juce::String& labelText)
+XLUREAudioProcessorEditor::~XLUREAudioProcessorEditor()
 {
-    auto& slider = sliders[static_cast<size_t>(index)];
-    auto& label = labels[static_cast<size_t>(index)];
-
-    slider.setSliderStyle(
-        juce::Slider::RotaryHorizontalVerticalDrag);
-
-    slider.setTextBoxStyle(
-        juce::Slider::TextBoxBelow, false, 70, 19);
-
-    slider.setColour(
-        juce::Slider::rotarySliderFillColourId, orange);
-    slider.setColour(
-        juce::Slider::rotarySliderOutlineColourId,
-        juce::Colour(75, 60, 75));
-    slider.setColour(
-        juce::Slider::thumbColourId, amber);
-    slider.setColour(
-        juce::Slider::textBoxTextColourId, cream);
-    slider.setColour(
-        juce::Slider::textBoxBackgroundColourId, panel);
-    slider.setColour(
-        juce::Slider::textBoxOutlineColourId, orange);
-
-    label.setText(labelText, juce::dontSendNotification);
-    label.setFont(juce::Font(11.0f, juce::Font::bold));
-    label.setJustificationType(juce::Justification::centred);
-    label.setColour(juce::Label::textColourId, amber);
-
-    addAndMakeVisible(slider);
-    addAndMakeVisible(label);
 }
 
-void SonicLureAudioProcessorEditor::paint(juce::Graphics& g)
+void XLUREAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(background);
+    g.fillAll(juce::Colour(0xff101c2a));
 
-    auto bounds = getLocalBounds().toFloat().reduced(10.0f);
+    auto area = getLocalBounds().toFloat();
 
-    g.setColour(panel);
-    g.fillRoundedRectangle(bounds, 16.0f);
+    g.setColour(juce::Colour(0xff1c3145));
+    g.drawRoundedRectangle(
+        area.reduced(8.0f),
+        14.0f,
+        2.0f);
 
-    g.setColour(orange);
-    g.drawRoundedRectangle(bounds, 16.0f, 2.0f);
-
-    g.setColour(orange.withAlpha(0.35f));
-    g.drawHorizontalLine(95, 25.0f, getWidth() - 25.0f);
-
-    g.setColour(amber);
-    g.setFont(juce::Font(13.0f, juce::Font::bold));
-    g.drawText(
-        "XLURE SOUND ENGINE  /  SAMPLE PLAYBACK",
-        30, 105, getWidth() - 60, 22,
-        juce::Justification::centredLeft);
-
-    g.setColour(orange.withAlpha(0.12f));
-    g.fillEllipse(0.0f, 0.0f, 180.0f, 180.0f);
+    g.setColour(juce::Colour(0xff176b91));
+    g.fillRoundedRectangle(
+        18.0f,
+        18.0f,
+        static_cast<float>(getWidth() - 36),
+        5.0f,
+        2.0f);
 }
 
-void SonicLureAudioProcessorEditor::resized()
+void XLUREAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds().reduced(28);
 
-    title.setBounds(area.removeFromTop(42));
-    subtitle.setBounds(area.removeFromTop(27));
+    titleLabel.setBounds(
+        area.removeFromTop(75));
 
-    const int gridTop = 125;
-    const int gap = 12;
-    const int columns = 4;
-    const int cellWidth =
-        (getWidth() - 56 - gap * (columns - 1)) / columns;
-    const int cellHeight = 119;
+    area.removeFromTop(20);
 
-    for (int i = 0; i < controlCount; ++i)
-    {
-        const int row = i / columns;
-        const int column = i % columns;
+    loadButton.setBounds(
+        area.removeFromTop(48).reduced(35, 2));
 
-        juce::Rectangle<int> cell(
-            28 + column * (cellWidth + gap),
-            gridTop + row * cellHeight,
-            cellWidth,
-            cellHeight - 4);
+    area.removeFromTop(12);
 
-        labels[static_cast<size_t>(i)].setBounds(
-            cell.removeFromTop(23));
+    playButton.setBounds(
+        area.removeFromTop(48).reduced(35, 2));
 
-        sliders[static_cast<size_t>(i)].setBounds(
-            cell.reduced(5));
-    }
+    area.removeFromTop(22);
 
-    waveformLabel.setBounds(
-        getWidth() / 2 - 145,
-        getHeight() - 48, 110, 25);
+    sampleLabel.setBounds(
+        area.removeFromTop(32));
 
-    waveform.setBounds(
-        getWidth() / 2 - 30,
-        getHeight() - 49, 150, 28);
+    statusLabel.setBounds(
+        area.removeFromTop(28));
+}
+
+void XLUREAudioProcessorEditor::loadWavFile()
+{
+    fileChooser = std::make_unique<juce::FileChooser>(
+        "Choose a WAV sample",
+        juce::File::getSpecialLocation(
+            juce::File::userHomeDirectory),
+        "*.wav");
+
+    fileChooser->launchAsync(
+        juce::FileBrowserComponent::openMode
+            | juce::FileBrowserComponent::canSelectFiles,
+        [this](const juce::FileChooser& chooser)
+        {
+            const juce::File file = chooser.getResult();
+
+            if (file.existsAsFile())
+            {
+                if (audioProcessor.loadSampleFile(file))
+                {
+                    sampleLabel.setText(
+                        audioProcessor.getLoadedSampleName(),
+                        juce::dontSendNotification);
+
+                    statusLabel.setText(
+                        "SAMPLE LOADED - READY TO PLAY",
+                        juce::dontSendNotification);
+                }
+                else
+                {
+                    statusLabel.setText(
+                        "Could not load this WAV file",
+                        juce::dontSendNotification);
+                }
+            }
+        });
 }
