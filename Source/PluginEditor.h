@@ -1,44 +1,31 @@
+
 #pragma once
 
-#include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include <array>
 
-class SonicLureAudioProcessorEditor : public juce::AudioProcessorEditor
+class XLUREAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
-    explicit SonicLureAudioProcessorEditor(SonicLureAudioProcessor&);
-    ~SonicLureAudioProcessorEditor() override;
+    explicit XLUREAudioProcessorEditor(XLUREAudioProcessor&);
+    ~XLUREAudioProcessorEditor() override;
 
     void paint(juce::Graphics&) override;
     void resized() override;
 
 private:
-    SonicLureAudioProcessor& audioProcessor;
+    XLUREAudioProcessor& audioProcessor;
 
-    static constexpr int controlCount = 14;
+    juce::TextButton loadButton { "LOAD WAV" };
+    juce::TextButton playButton { "PLAY" };
 
-    juce::Label title;
-    juce::Label subtitle;
+    juce::Label titleLabel;
+    juce::Label sampleLabel;
+    juce::Label statusLabel;
 
-    std::array<juce::Slider, controlCount> sliders;
-    std::array<juce::Label, controlCount> labels;
+    std::unique_ptr<juce::FileChooser> fileChooser;
 
-    using SliderAttachment =
-        juce::AudioProcessorValueTreeState::SliderAttachment;
-
-    std::array<std::unique_ptr<SliderAttachment>, controlCount>
-        sliderAttachments;
-
-    juce::ComboBox waveform;
-    juce::Label waveformLabel;
-
-    std::unique_ptr<
-        juce::AudioProcessorValueTreeState::ComboBoxAttachment>
-        waveformAttachment;
-
-    void setupSlider(int index, const juce::String& labelText);
+    void loadWavFile();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(
-        SonicLureAudioProcessorEditor)
+        XLUREAudioProcessorEditor)
 };
