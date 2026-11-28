@@ -18,7 +18,6 @@ public:
 
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
-
     const juce::String getName() const override;
 
     bool acceptsMidi() const override;
@@ -36,9 +35,17 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
+    // Load WAV samples from a soundbank folder
+    void loadSampleBank(const juce::File& folder);
+
+    // Remove the currently loaded sample bank
+    void clearSampleBank();
+
     juce::AudioProcessorValueTreeState parameters;
 
 private:
+    juce::AudioFormatManager formatManager;
+
     juce::Synthesiser synthesiser;
 
     static juce::AudioProcessorValueTreeState::ParameterLayout
