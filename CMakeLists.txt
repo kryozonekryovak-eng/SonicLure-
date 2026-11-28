@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-project(LureX VERSION 0.1.0)
+project(XLURE VERSION 0.1.0)
 
 include(FetchContent)
 
@@ -13,13 +13,13 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(JUCE)
 
-juce_add_plugin(LureX
+juce_add_plugin(XLURE
     COMPANY_NAME "KRYOZONE AUDIO"
-    BUNDLE_ID com.kryozoneaudio.LureX
+    BUNDLE_ID com.kryozoneaudio.XLURE
     PLUGIN_MANUFACTURER_CODE Kryo
-    PLUGIN_CODE SnLu
+    PLUGIN_CODE Xlur
     FORMATS VST3
-    PRODUCT_NAME "LureX"
+    PRODUCT_NAME "XLURE"
     IS_SYNTH TRUE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT FALSE
@@ -28,22 +28,22 @@ juce_add_plugin(LureX
     COPY_PLUGIN_AFTER_BUILD FALSE
 )
 
-juce_generate_juce_header(LureX)
+juce_generate_juce_header(XLURE)
 
-target_sources(LureX PRIVATE
+target_sources(XLURE PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
 )
 
-target_compile_features(LureX PRIVATE cxx_std_17)
+target_compile_features(XLURE PRIVATE cxx_std_17)
 
-target_compile_definitions(LureX PUBLIC
+target_compile_definitions(XLURE PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0
 )
 
-target_link_libraries(LureX PRIVATE
+target_link_libraries(XLURE PRIVATE
     juce::juce_audio_utils
     juce::juce_audio_processors
     juce::juce_dsp
