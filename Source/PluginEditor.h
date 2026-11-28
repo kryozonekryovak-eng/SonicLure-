@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <JuceHeader.h>
@@ -35,6 +34,7 @@ private:
     };
 
     PURELUREAudioProcessor& audioProcessor;
+
     LiquidWindow liquidWindow;
 
     juce::Label titleLabel;
