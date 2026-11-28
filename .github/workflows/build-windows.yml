@@ -1,5 +1,4 @@
-
-name: Build LureX VST3
+name: Build XLURE VST3
 
 on:
   push:
@@ -15,15 +14,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure LureX
+      - name: Configure XLURE
         run: cmake -B build -S . -A x64
 
-      - name: Build LureX
+      - name: Build XLURE
         run: cmake --build build --config Release --parallel 2
 
-      - name: Upload LureX VST3
+      - name: Upload XLURE VST3
         uses: actions/upload-artifact@v4
         with:
-          name: LureX-Windows-VST3
-          path: build/LureX_artefacts/Release/VST3/LureX.vst3
+          name: XLURE-Windows-VST3
+          path: build/XLURE_artefacts/Release/VST3/XLURE.vst3
           if-no-files-found: error
