@@ -2,9 +2,7 @@
 #include "PluginEditor.h"
 #include <cmath>
 
-//==============================================================
 // LIQUID DISPLAY
-//==============================================================
 
 PURELUREAudioProcessorEditor::LiquidWindow::LiquidWindow()
 {
@@ -23,19 +21,16 @@ void PURELUREAudioProcessorEditor::LiquidWindow::setTheme(int newTheme)
             liquidColour = juce::Colour::fromRGB(0, 150, 220);
             highlightColour = juce::Colour::fromRGB(100, 235, 255);
             break;
-
         case 1:
             backgroundColour = juce::Colour::fromRGB(35, 23, 13);
             liquidColour = juce::Colour::fromRGB(175, 105, 40);
             highlightColour = juce::Colour::fromRGB(255, 195, 100);
             break;
-
         case 2:
             backgroundColour = juce::Colour::fromRGB(5, 28, 28);
             liquidColour = juce::Colour::fromRGB(0, 190, 135);
             highlightColour = juce::Colour::fromRGB(100, 255, 205);
             break;
-
         default:
             backgroundColour = juce::Colour::fromRGB(10, 31, 25);
             liquidColour = juce::Colour::fromRGB(75, 180, 115);
@@ -68,10 +63,7 @@ void PURELUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
     const float radius = diameter * 0.5f;
 
     juce::Rectangle<float> circle(
-        centreX - radius,
-        centreY - radius,
-        diameter,
-        diameter);
+        centreX - radius, centreY - radius, diameter, diameter);
 
     g.setColour(liquidColour.withAlpha(0.12f));
     g.fillEllipse(circle.expanded(8.0f));
@@ -88,14 +80,9 @@ void PURELUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
     g.setColour(liquidColour.withAlpha(0.25f));
     g.fillEllipse(circle);
 
-    const float waveOne =
-        std::sin(animationPhase) * radius * 0.10f;
-
-    const float waveTwo =
-        std::cos(animationPhase * 0.75f) * radius * 0.09f;
-
-    const float waveThree =
-        std::sin(animationPhase * 1.3f) * radius * 0.06f;
+    const float waveOne = std::sin(animationPhase) * radius * 0.10f;
+    const float waveTwo = std::cos(animationPhase * 0.75f) * radius * 0.09f;
+    const float waveThree = std::sin(animationPhase * 1.3f) * radius * 0.06f;
 
     juce::ColourGradient gradient(
         highlightColour.withAlpha(0.85f),
@@ -109,10 +96,7 @@ void PURELUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
     g.setGradientFill(gradient);
 
     juce::Path liquid;
-
-    liquid.startNewSubPath(
-        centreX - radius,
-        centreY + waveOne);
+    liquid.startNewSubPath(centreX - radius, centreY + waveOne);
 
     liquid.cubicTo(
         centreX - radius * 0.55f,
@@ -131,7 +115,6 @@ void PURELUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
     g.setColour(highlightColour.withAlpha(0.22f));
 
     juce::Path highlight;
-
     highlight.startNewSubPath(
         centreX - radius,
         centreY + radius * 0.15f + waveTwo);
@@ -147,7 +130,6 @@ void PURELUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
     g.strokePath(highlight, juce::PathStrokeType(3.0f));
 
     g.setColour(highlightColour.withAlpha(0.12f));
-
     g.fillEllipse(
         centreX - radius * 0.30f,
         centreY - radius * 0.30f,
@@ -163,9 +145,7 @@ void PURELUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
     g.drawEllipse(circle.reduced(6.0f), 1.0f);
 }
 
-//==============================================================
 // PURELURE EDITOR
-//==============================================================
 
 PURELUREAudioProcessorEditor::PURELUREAudioProcessorEditor(
     PURELUREAudioProcessor& processor)
@@ -221,12 +201,8 @@ PURELUREAudioProcessorEditor::PURELUREAudioProcessorEditor(
     playButton.onClick = [this] { audioProcessor.playPreview(); };
 
     addAndMakeVisible(sampleLabel);
-    sampleLabel.setText(
-        "NO WAV SAMPLE LOADED",
-        juce::dontSendNotification);
-    sampleLabel.setColour(
-        juce::Label::textColourId,
-        juce::Colours::lightgrey);
+    sampleLabel.setText("NO WAV SAMPLE LOADED", juce::dontSendNotification);
+    sampleLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     sampleLabel.setFont(juce::Font(13.0f));
 
     addAndMakeVisible(statusLabel);
@@ -265,9 +241,7 @@ PURELUREAudioProcessorEditor::PURELUREAudioProcessorEditor(
 
 PURELUREAudioProcessorEditor::~PURELUREAudioProcessorEditor() = default;
 
-//==============================================================
 // BACKGROUND
-//==============================================================
 
 void PURELUREAudioProcessorEditor::paint(juce::Graphics& g)
 {
@@ -276,18 +250,12 @@ void PURELUREAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(juce::Colour::fromRGB(20, 39, 57));
     g.drawHorizontalLine(82, 20.0f, getWidth() - 20.0f);
 
-    g.setColour(
-        juce::Colour::fromRGB(40, 85, 110).withAlpha(0.5f));
-
+    g.setColour(juce::Colour::fromRGB(40, 85, 110).withAlpha(0.5f));
     g.drawRoundedRectangle(
-        getLocalBounds().toFloat().reduced(8.0f),
-        14.0f,
-        1.0f);
+        getLocalBounds().toFloat().reduced(8.0f), 14.0f, 1.0f);
 }
 
-//==============================================================
 // LAYOUT
-//==============================================================
 
 void PURELUREAudioProcessorEditor::resized()
 {
@@ -304,14 +272,10 @@ void PURELUREAudioProcessorEditor::resized()
     auto topLeft = themeArea.removeFromTop(27);
     auto bottomLeft = themeArea.removeFromTop(27);
 
-    oceanButton.setBounds(
-        topLeft.removeFromLeft(halfWidth).reduced(3));
-
+    oceanButton.setBounds(topLeft.removeFromLeft(halfWidth).reduced(3));
     muddyButton.setBounds(topLeft.reduced(3));
 
-    riverButton.setBounds(
-        bottomLeft.removeFromLeft(halfWidth).reduced(3));
-
+    riverButton.setBounds(bottomLeft.removeFromLeft(halfWidth).reduced(3));
     lilyButton.setBounds(bottomLeft.reduced(3));
 
     area.removeFromTop(12);
@@ -338,11 +302,8 @@ void PURELUREAudioProcessorEditor::resized()
     auto buttonsArea = controlsArea.removeFromLeft(
         juce::jmin(190, controlsArea.getWidth() / 3));
 
-    loadButton.setBounds(
-        buttonsArea.removeFromTop(38).reduced(2));
-
-    playButton.setBounds(
-        buttonsArea.removeFromTop(38).reduced(2));
+    loadButton.setBounds(buttonsArea.removeFromTop(38).reduced(2));
+    playButton.setBounds(buttonsArea.removeFromTop(38).reduced(2));
 
     controlsArea.removeFromLeft(10);
 
@@ -362,12 +323,9 @@ void PURELUREAudioProcessorEditor::resized()
     masterSlider.setBounds(masterArea);
 }
 
-//==============================================================
 // BUTTON STYLING
-//==============================================================
 
-void PURELUREAudioProcessorEditor::styleButton(
-    juce::TextButton& button)
+void PURELUREAudioProcessorEditor::styleButton(juce::TextButton& button)
 {
     button.setColour(
         juce::TextButton::buttonColourId,
@@ -386,9 +344,7 @@ void PURELUREAudioProcessorEditor::styleButton(
         juce::Colours::white);
 }
 
-//==============================================================
 // SLIDER SETUP
-//==============================================================
 
 void PURELUREAudioProcessorEditor::setupSlider(
     juce::Slider& slider,
@@ -406,15 +362,8 @@ void PURELUREAudioProcessorEditor::setupSlider(
 
     label.setJustificationType(juce::Justification::centred);
 
-    slider.setSliderStyle(
-        juce::Slider::RotaryHorizontalVerticalDrag);
-
-    slider.setTextBoxStyle(
-        juce::Slider::TextBoxBelow,
-        false,
-        55,
-        18);
-
+    slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 55, 18);
     slider.setRange(0.0, 1.0, 0.001);
 
     slider.setColour(
@@ -438,30 +387,19 @@ void PURELUREAudioProcessorEditor::setupSlider(
         juce::Colours::transparentBlack);
 }
 
-//==============================================================
 // THEME SELECTION
-//==============================================================
 
 void PURELUREAudioProcessorEditor::selectTheme(int themeIndex)
 {
     liquidWindow.setTheme(themeIndex);
 
-    oceanButton.setToggleState(
-        themeIndex == 0, juce::dontSendNotification);
-
-    muddyButton.setToggleState(
-        themeIndex == 1, juce::dontSendNotification);
-
-    riverButton.setToggleState(
-        themeIndex == 2, juce::dontSendNotification);
-
-    lilyButton.setToggleState(
-        themeIndex == 3, juce::dontSendNotification);
+    oceanButton.setToggleState(themeIndex == 0, juce::dontSendNotification);
+    muddyButton.setToggleState(themeIndex == 1, juce::dontSendNotification);
+    riverButton.setToggleState(themeIndex == 2, juce::dontSendNotification);
+    lilyButton.setToggleState(themeIndex == 3, juce::dontSendNotification);
 }
 
-//==============================================================
 // WAV LOADING
-//==============================================================
 
 void PURELUREAudioProcessorEditor::loadWavFile()
 {
