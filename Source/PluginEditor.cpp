@@ -4,11 +4,11 @@
 
 namespace
 {
-    const juce::Colour background(10, 10, 12);
-    const juce::Colour panel(27, 24, 22);
-    const juce::Colour orange(235, 105, 25);
-    const juce::Colour amber(255, 174, 65);
-    const juce::Colour cream(245, 235, 220);
+    const juce::Colour background(10, 8, 14);
+    const juce::Colour panel(30, 22, 35);
+    const juce::Colour orange(145, 45, 130);
+    const juce::Colour amber(190, 105, 205);
+    const juce::Colour cream(240, 225, 245);
 
     const std::array<const char*, 14> parameterIDs =
     {
@@ -38,7 +38,7 @@ SonicLureAudioProcessorEditor::SonicLureAudioProcessorEditor(
     title.setColour(juce::Label::textColourId, amber);
     addAndMakeVisible(title);
 
-    subtitle.setText("BLACKOUT ORANGE  |  CAST YOUR SOUND",
+    subtitle.setText("BLACKOUT VIOLET  |  CAST YOUR SOUND",
                      juce::dontSendNotification);
     subtitle.setJustificationType(juce::Justification::centred);
     subtitle.setColour(juce::Label::textColourId, orange);
@@ -101,7 +101,7 @@ void SonicLureAudioProcessorEditor::setupSlider(
         juce::Slider::rotarySliderFillColourId, orange);
     slider.setColour(
         juce::Slider::rotarySliderOutlineColourId,
-        juce::Colour(75, 60, 48));
+        juce::Colour(75, 60, 75));
     slider.setColour(
         juce::Slider::thumbColourId, amber);
     slider.setColour(
