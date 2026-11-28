@@ -1,6 +1,5 @@
 
 #pragma once
-
 #include <JuceHeader.h>
 #include <array>
 #include <atomic>
@@ -28,7 +27,6 @@ public:
     bool producesMidi() const override;
     bool isMidiEffect() const override;
     double getTailLengthSeconds() const override;
-
     int getNumPrograms() override;
     int getCurrentProgram() override;
     void setCurrentProgram(int index) override;
@@ -38,36 +36,30 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-    // WAV SAMPLE ENGINE
+    // WAV sample engine
     bool loadSampleFile(const juce::File& file);
     void playPreview();
     juce::String getLoadedSampleName() const;
 
-    // EXISTING MORPH CONTROLS
+    // Sample start and end controls
+    void setSampleStart(float value);
+    void setSampleEnd(float value);
+    float getSampleStart() const;
+    float getSampleEnd() const;
+    void resetSampleRange();
+
+    // XY Morph Pad controls
     void setMorphPosition(float x, float y);
     float getMorphX() const;
     float getMorphY() const;
 
-    // SYNTHESIS CONTROLS
+    // Synthesis controls
     void setFilterCutoff(float value);
     void setFilterResonance(float value);
     void setModalAmount(float value);
     void setMasterLevel(float value);
 
-    // ADSR ENVELOPE CONTROLS
-    void setADSR(
-        float attack,
-        float decay,
-        float sustain,
-        float release);
-
-    float getAttack() const;
-    float getDecay() const;
-    float getSustain() const;
-    float getRelease() const;
-
 private:
-
     struct XLUREVoice
     {
         bool active = false;
@@ -95,7 +87,7 @@ private:
 
     std::array<XLUREVoice, maximumVoices> voices;
 
-    // WAV SAMPLE ENGINE
+    // WAV sample engine
     juce::AudioFormatManager formatManager;
     juce::Synthesiser sampler;
     juce::CriticalSection samplerLock;
@@ -105,7 +97,11 @@ private:
     std::atomic<bool> previewRequested { false };
     int previewSamplesRemaining = 0;
 
-    // AUDIO ENGINE STATE
+    // Sample playback region: 0.0 to 1.0
+    std::atomic<float> sampleStart { 0.0f };
+    std::atomic<float> sampleEnd { 1.0f };
+
+    // Audio engine state
     double currentSampleRate = 44100.0;
 
     std::atomic<float> morphX { 0.5f };
@@ -116,22 +112,16 @@ private:
     std::atomic<float> modalAmount { 0.5f };
     std::atomic<float> masterLevel { 0.75f };
 
-    // ADJUSTABLE ADSR PARAMETERS
-    std::atomic<float> attackTime { 0.012f };
-    std::atomic<float> decayTime { 0.30f };
-    std::atomic<float> sustainLevel { 0.75f };
-    std::atomic<float> releaseTime { 0.30f };
-
     float smoothedMorph = 0.5f;
     float smoothedBrightness = 0.5f;
 
-    // MIDI AND VOICE MANAGEMENT
+    // MIDI and voice management
     void handleMidiMessage(const juce::MidiMessage& message);
     void startVoice(int midiNote, float velocity);
     void stopVoice(int midiNote);
     int findFreeVoice() const;
 
-    // SOUND GENERATION
+    // Sound generation
     float renderVoice(XLUREVoice& voice);
 
     float renderSubtractive(
