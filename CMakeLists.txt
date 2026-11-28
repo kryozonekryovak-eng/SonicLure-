@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-project(SonicLure VERSION 0.1.0)
+project(LureX VERSION 0.1.0)
 
 include(FetchContent)
 
@@ -13,13 +13,13 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(JUCE)
 
-juce_add_plugin(SonicLure
+juce_add_plugin(LureX
     COMPANY_NAME "KRYOZONE AUDIO"
-    BUNDLE_ID com.kryozoneaudio.soniclure
+    BUNDLE_ID com.kryozoneaudio.LureX
     PLUGIN_MANUFACTURER_CODE Kryo
     PLUGIN_CODE SnLu
     FORMATS VST3
-    PRODUCT_NAME "SonicLure"
+    PRODUCT_NAME "LureX"
     IS_SYNTH TRUE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT FALSE
@@ -28,22 +28,22 @@ juce_add_plugin(SonicLure
     COPY_PLUGIN_AFTER_BUILD FALSE
 )
 
-juce_generate_juce_header(SonicLure)
+juce_generate_juce_header(LureX)
 
-target_sources(SonicLure PRIVATE
+target_sources(LureX PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
 )
 
-target_compile_features(SonicLure PRIVATE cxx_std_17)
+target_compile_features(LureX PRIVATE cxx_std_17)
 
-target_compile_definitions(SonicLure PUBLIC
+target_compile_definitions(LureX PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0
 )
 
-target_link_libraries(SonicLure PRIVATE
+target_link_libraries(LureX PRIVATE
     juce::juce_audio_utils
     juce::juce_audio_processors
     juce::juce_dsp
