@@ -98,12 +98,7 @@ void XLUREAudioProcessor::processBlock(
 
     const int numSamples = buffer.getNumSamples();
 
-    for (int channel = getTotalNumInputChannels();
-         channel < getTotalNumOutputChannels();
-         ++channel)
-    {
-        buffer.clear(channel, 0, numSamples);
-    }
+    buffer.clear();
 
     juce::ScopedLock lock(samplerLock);
 
@@ -115,6 +110,7 @@ void XLUREAudioProcessor::processBlock(
     }
 
     juce::MidiBuffer playbackMidi;
+
     playbackMidi.addEvents(
         midiMessages,
         0,
@@ -125,11 +121,8 @@ void XLUREAudioProcessor::processBlock(
     {
         if (previewSamplesRemaining <= numSamples)
         {
-            juce::MidiMessage noteOff =
-                juce::MidiMessage::noteOff(1, 60);
-
             playbackMidi.addEvent(
-                noteOff,
+                juce::MidiMessage::noteOff(1, 60),
                 previewSamplesRemaining);
 
             previewSamplesRemaining = 0;
@@ -182,11 +175,14 @@ bool XLUREAudioProcessor::loadSampleFile(
     sampler.allNotesOff(0, false);
     sampler.clearSounds();
 
+    juce::BigInteger midiNotes;
+    midiNotes.setRange(0, 128, true);
+
     sampler.addSound(
         new juce::SamplerSound(
             file.getFileNameWithoutExtension(),
             *reader,
-            juce::BigInteger(0, 128),
+            midiNotes,
             60,
             0.01,
             0.8,
