@@ -3,40 +3,40 @@
 #include <cmath>
 
 //==============================================================
-// ANIMATED CIRCULAR LIQUID WINDOW
+// LIQUID DISPLAY
 //==============================================================
 
-XLUREAudioProcessorEditor::LiquidWindow::LiquidWindow()
+PURELUREAudioProcessorEditor::LiquidWindow::LiquidWindow()
 {
     setTheme(0);
     startTimerHz(30);
 }
 
-void XLUREAudioProcessorEditor::LiquidWindow::setTheme(int newTheme)
+void PURELUREAudioProcessorEditor::LiquidWindow::setTheme(int newTheme)
 {
     theme = juce::jlimit(0, 3, newTheme);
 
     switch (theme)
     {
-        case 0: // OCEAN
+        case 0:
             backgroundColour = juce::Colour::fromRGB(5, 17, 35);
             liquidColour = juce::Colour::fromRGB(0, 150, 220);
             highlightColour = juce::Colour::fromRGB(100, 235, 255);
             break;
 
-        case 1: // MUDDY PUDDLE
+        case 1:
             backgroundColour = juce::Colour::fromRGB(35, 23, 13);
             liquidColour = juce::Colour::fromRGB(175, 105, 40);
             highlightColour = juce::Colour::fromRGB(255, 195, 100);
             break;
 
-        case 2: // RIVER
+        case 2:
             backgroundColour = juce::Colour::fromRGB(5, 28, 28);
             liquidColour = juce::Colour::fromRGB(0, 190, 135);
             highlightColour = juce::Colour::fromRGB(100, 255, 205);
             break;
 
-        default: // LILY POND
+        default:
             backgroundColour = juce::Colour::fromRGB(10, 31, 25);
             liquidColour = juce::Colour::fromRGB(75, 180, 115);
             highlightColour = juce::Colour::fromRGB(170, 255, 185);
@@ -46,7 +46,7 @@ void XLUREAudioProcessorEditor::LiquidWindow::setTheme(int newTheme)
     repaint();
 }
 
-void XLUREAudioProcessorEditor::LiquidWindow::timerCallback()
+void PURELUREAudioProcessorEditor::LiquidWindow::timerCallback()
 {
     animationPhase += 0.035f;
 
@@ -56,7 +56,7 @@ void XLUREAudioProcessorEditor::LiquidWindow::timerCallback()
     repaint();
 }
 
-void XLUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
+void PURELUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat();
 
@@ -73,30 +73,30 @@ void XLUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
         diameter,
         diameter);
 
-    // Outer glow
     g.setColour(liquidColour.withAlpha(0.12f));
     g.fillEllipse(circle.expanded(8.0f));
 
-    // Main circular background
     g.setColour(backgroundColour);
     g.fillEllipse(circle);
 
-    // Clip animation inside the circle
     juce::Path clippingPath;
     clippingPath.addEllipse(circle);
 
     g.saveState();
     g.reduceClipRegion(clippingPath);
 
-    // Dark liquid base
     g.setColour(liquidColour.withAlpha(0.25f));
     g.fillEllipse(circle);
 
-    const float waveOne = std::sin(animationPhase) * radius * 0.10f;
-    const float waveTwo = std::cos(animationPhase * 0.75f) * radius * 0.09f;
-    const float waveThree = std::sin(animationPhase * 1.3f) * radius * 0.06f;
+    const float waveOne =
+        std::sin(animationPhase) * radius * 0.10f;
 
-    // Moving liquid shape
+    const float waveTwo =
+        std::cos(animationPhase * 0.75f) * radius * 0.09f;
+
+    const float waveThree =
+        std::sin(animationPhase * 1.3f) * radius * 0.06f;
+
     juce::ColourGradient gradient(
         highlightColour.withAlpha(0.85f),
         centreX - radius * 0.45f,
@@ -123,17 +123,15 @@ void XLUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
         centreY - radius * 0.20f + waveThree);
 
     liquid.lineTo(centreX + radius, centreY + radius);
-
     liquid.lineTo(centreX - radius, centreY + radius);
-
     liquid.closeSubPath();
 
     g.fillPath(liquid);
 
-    // Secondary flowing highlight
     g.setColour(highlightColour.withAlpha(0.22f));
 
     juce::Path highlight;
+
     highlight.startNewSubPath(
         centreX - radius,
         centreY + radius * 0.15f + waveTwo);
@@ -146,12 +144,10 @@ void XLUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
         centreX + radius,
         centreY + radius * 0.05f);
 
-    g.strokePath(
-        highlight,
-        juce::PathStrokeType(3.0f));
+    g.strokePath(highlight, juce::PathStrokeType(3.0f));
 
-    // Soft central glow
     g.setColour(highlightColour.withAlpha(0.12f));
+
     g.fillEllipse(
         centreX - radius * 0.30f,
         centreY - radius * 0.30f,
@@ -160,7 +156,6 @@ void XLUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
 
     g.restoreState();
 
-    // Circular glass outline
     g.setColour(highlightColour.withAlpha(0.65f));
     g.drawEllipse(circle, 2.5f);
 
@@ -169,11 +164,11 @@ void XLUREAudioProcessorEditor::LiquidWindow::paint(juce::Graphics& g)
 }
 
 //==============================================================
-// MAIN XLURE EDITOR
+// PURELURE EDITOR
 //==============================================================
 
-XLUREAudioProcessorEditor::XLUREAudioProcessorEditor(
-    XLUREAudioProcessor& processor)
+PURELUREAudioProcessorEditor::PURELUREAudioProcessorEditor(
+    PURELUREAudioProcessor& processor)
     : juce::AudioProcessorEditor(&processor),
       audioProcessor(processor)
 {
@@ -181,9 +176,8 @@ XLUREAudioProcessorEditor::XLUREAudioProcessorEditor(
     setResizable(true, true);
     setResizeLimits(650, 600, 1400, 1100);
 
-    // Title
     addAndMakeVisible(titleLabel);
-    titleLabel.setText("XLURE", juce::dontSendNotification);
+    titleLabel.setText("PURELURE", juce::dontSendNotification);
     titleLabel.setFont(juce::Font(36.0f, juce::Font::bold));
     titleLabel.setColour(
         juce::Label::textColourId,
@@ -198,10 +192,8 @@ XLUREAudioProcessorEditor::XLUREAudioProcessorEditor(
         juce::Label::textColourId,
         juce::Colours::lightgrey);
 
-    // Animated circular display
     addAndMakeVisible(liquidWindow);
 
-    // Four environment buttons
     addAndMakeVisible(oceanButton);
     addAndMakeVisible(muddyButton);
     addAndMakeVisible(riverButton);
@@ -219,7 +211,6 @@ XLUREAudioProcessorEditor::XLUREAudioProcessorEditor(
 
     selectTheme(0);
 
-    // WAV sample controls
     addAndMakeVisible(loadButton);
     addAndMakeVisible(playButton);
 
@@ -245,7 +236,6 @@ XLUREAudioProcessorEditor::XLUREAudioProcessorEditor(
         juce::Colour::fromRGB(100, 225, 190));
     statusLabel.setFont(juce::Font(12.0f));
 
-    // Synthesis controls
     setupSlider(cutoffSlider, cutoffLabel, "FILTER");
     setupSlider(resonanceSlider, resonanceLabel, "RESONANCE");
     setupSlider(masterSlider, masterLabel, "MASTER");
@@ -273,13 +263,13 @@ XLUREAudioProcessorEditor::XLUREAudioProcessorEditor(
     };
 }
 
-XLUREAudioProcessorEditor::~XLUREAudioProcessorEditor() = default;
+PURELUREAudioProcessorEditor::~PURELUREAudioProcessorEditor() = default;
 
 //==============================================================
-// EDITOR BACKGROUND
+// BACKGROUND
 //==============================================================
 
-void XLUREAudioProcessorEditor::paint(juce::Graphics& g)
+void PURELUREAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colour::fromRGB(7, 11, 21));
 
@@ -299,7 +289,7 @@ void XLUREAudioProcessorEditor::paint(juce::Graphics& g)
 // LAYOUT
 //==============================================================
 
-void XLUREAudioProcessorEditor::resized()
+void PURELUREAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds().reduced(24);
 
@@ -308,9 +298,7 @@ void XLUREAudioProcessorEditor::resized()
 
     area.removeFromTop(12);
 
-    // Four theme quadrants
     auto themeArea = area.removeFromTop(54);
-
     const int halfWidth = themeArea.getWidth() / 2;
 
     auto topLeft = themeArea.removeFromTop(27);
@@ -319,18 +307,15 @@ void XLUREAudioProcessorEditor::resized()
     oceanButton.setBounds(
         topLeft.removeFromLeft(halfWidth).reduced(3));
 
-    muddyButton.setBounds(
-        topLeft.reduced(3));
+    muddyButton.setBounds(topLeft.reduced(3));
 
     riverButton.setBounds(
         bottomLeft.removeFromLeft(halfWidth).reduced(3));
 
-    lilyButton.setBounds(
-        bottomLeft.reduced(3));
+    lilyButton.setBounds(bottomLeft.reduced(3));
 
     area.removeFromTop(12);
 
-    // Large circular liquid display
     auto displayArea = area.removeFromTop(
         juce::jmax(230, area.getHeight() - 205));
 
@@ -338,7 +323,6 @@ void XLUREAudioProcessorEditor::resized()
 
     area.removeFromTop(10);
 
-    // Sample information
     auto sampleArea = area.removeFromTop(26);
 
     sampleLabel.setBounds(
@@ -349,7 +333,6 @@ void XLUREAudioProcessorEditor::resized()
 
     area.removeFromTop(8);
 
-    // Bottom controls
     auto controlsArea = area;
 
     auto buttonsArea = controlsArea.removeFromLeft(
@@ -383,7 +366,7 @@ void XLUREAudioProcessorEditor::resized()
 // BUTTON STYLING
 //==============================================================
 
-void XLUREAudioProcessorEditor::styleButton(
+void PURELUREAudioProcessorEditor::styleButton(
     juce::TextButton& button)
 {
     button.setColour(
@@ -407,7 +390,7 @@ void XLUREAudioProcessorEditor::styleButton(
 // SLIDER SETUP
 //==============================================================
 
-void XLUREAudioProcessorEditor::setupSlider(
+void PURELUREAudioProcessorEditor::setupSlider(
     juce::Slider& slider,
     juce::Label& label,
     const juce::String& name)
@@ -459,7 +442,7 @@ void XLUREAudioProcessorEditor::setupSlider(
 // THEME SELECTION
 //==============================================================
 
-void XLUREAudioProcessorEditor::selectTheme(int themeIndex)
+void PURELUREAudioProcessorEditor::selectTheme(int themeIndex)
 {
     liquidWindow.setTheme(themeIndex);
 
@@ -477,10 +460,10 @@ void XLUREAudioProcessorEditor::selectTheme(int themeIndex)
 }
 
 //==============================================================
-// WAV FILE LOADING
+// WAV LOADING
 //==============================================================
 
-void XLUREAudioProcessorEditor::loadWavFile()
+void PURELUREAudioProcessorEditor::loadWavFile()
 {
     fileChooser = std::make_unique<juce::FileChooser>(
         "Choose a WAV sample",
