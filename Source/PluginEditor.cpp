@@ -4,11 +4,11 @@
 
 namespace
 {
-    const juce::Colour backgroundColour(10, 10, 12);
-    const juce::Colour panelColour(25, 23, 22);
-    const juce::Colour orangeColour(235, 105, 25);
-    const juce::Colour amberColour(255, 174, 65);
-    const juce::Colour textColour(245, 235, 220);
+    const juce::Colour background(10, 10, 12);
+    const juce::Colour panel(27, 24, 22);
+    const juce::Colour orange(235, 105, 25);
+    const juce::Colour amber(255, 174, 65);
+    const juce::Colour cream(245, 235, 220);
 
     const std::array<const char*, 14> parameterIDs =
     {
@@ -35,14 +35,13 @@ SonicLureAudioProcessorEditor::SonicLureAudioProcessorEditor(
     title.setText("SONICLURE", juce::dontSendNotification);
     title.setFont(juce::Font(32.0f, juce::Font::bold));
     title.setJustificationType(juce::Justification::centred);
-    title.setColour(juce::Label::textColourId, amberColour);
+    title.setColour(juce::Label::textColourId, amber);
     addAndMakeVisible(title);
 
     subtitle.setText("BLACKOUT ORANGE  |  CAST YOUR SOUND",
                      juce::dontSendNotification);
-    subtitle.setFont(juce::Font(12.0f));
     subtitle.setJustificationType(juce::Justification::centred);
-    subtitle.setColour(juce::Label::textColourId, orangeColour);
+    subtitle.setColour(juce::Label::textColourId, orange);
     addAndMakeVisible(subtitle);
 
     for (int i = 0; i < controlCount; ++i)
@@ -59,19 +58,26 @@ SonicLureAudioProcessorEditor::SonicLureAudioProcessorEditor(
     waveform.addItem("Sine", 1);
     waveform.addItem("Saw", 2);
     waveform.addItem("Square", 3);
-    waveform.setColour(juce::ComboBox::backgroundColourId, panelColour);
-    waveform.setColour(juce::ComboBox::textColourId, amberColour);
-    waveform.setColour(juce::ComboBox::outlineColourId, orangeColour);
+
+    waveform.setColour(
+        juce::ComboBox::backgroundColourId, panel);
+    waveform.setColour(
+        juce::ComboBox::textColourId, amber);
+    waveform.setColour(
+        juce::ComboBox::outlineColourId, orange);
+
     addAndMakeVisible(waveform);
 
     waveformLabel.setText("WAVEFORM", juce::dontSendNotification);
     waveformLabel.setJustificationType(juce::Justification::centred);
-    waveformLabel.setColour(juce::Label::textColourId, textColour);
+    waveformLabel.setColour(
+        juce::Label::textColourId, cream);
     addAndMakeVisible(waveformLabel);
 
     waveformAttachment =
-        std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
-            audioProcessor.parameters, "WAVEFORM", waveform);
+        std::make_unique<
+            juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+                audioProcessor.parameters, "WAVEFORM", waveform);
 
     setSize(900, 700);
 }
@@ -85,22 +91,30 @@ void SonicLureAudioProcessorEditor::setupSlider(
     auto& slider = sliders[static_cast<size_t>(index)];
     auto& label = labels[static_cast<size_t>(index)];
 
-    slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    slider.setTextBoxStyle(
-        juce::Slider::TextBoxBelow, false, 65, 19);
+    slider.setSliderStyle(
+        juce::Slider::RotaryHorizontalVerticalDrag);
 
-    slider.setColour(juce::Slider::rotarySliderFillColourId, orangeColour);
-    slider.setColour(juce::Slider::rotarySliderOutlineColourId,
-                     juce::Colour(75, 60, 48));
-    slider.setColour(juce::Slider::thumbColourId, amberColour);
-    slider.setColour(juce::Slider::textBoxTextColourId, textColour);
-    slider.setColour(juce::Slider::textBoxBackgroundColourId, panelColour);
-    slider.setColour(juce::Slider::textBoxOutlineColourId, orangeColour);
+    slider.setTextBoxStyle(
+        juce::Slider::TextBoxBelow, false, 70, 19);
+
+    slider.setColour(
+        juce::Slider::rotarySliderFillColourId, orange);
+    slider.setColour(
+        juce::Slider::rotarySliderOutlineColourId,
+        juce::Colour(75, 60, 48));
+    slider.setColour(
+        juce::Slider::thumbColourId, amber);
+    slider.setColour(
+        juce::Slider::textBoxTextColourId, cream);
+    slider.setColour(
+        juce::Slider::textBoxBackgroundColourId, panel);
+    slider.setColour(
+        juce::Slider::textBoxOutlineColourId, orange);
 
     label.setText(labelText, juce::dontSendNotification);
     label.setFont(juce::Font(11.0f, juce::Font::bold));
     label.setJustificationType(juce::Justification::centred);
-    label.setColour(juce::Label::textColourId, amberColour);
+    label.setColour(juce::Label::textColourId, amber);
 
     addAndMakeVisible(slider);
     addAndMakeVisible(label);
@@ -108,33 +122,27 @@ void SonicLureAudioProcessorEditor::setupSlider(
 
 void SonicLureAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(backgroundColour);
+    g.fillAll(background);
 
     auto bounds = getLocalBounds().toFloat().reduced(10.0f);
 
-    g.setColour(panelColour);
+    g.setColour(panel);
     g.fillRoundedRectangle(bounds, 16.0f);
 
-    g.setColour(orangeColour);
+    g.setColour(orange);
     g.drawRoundedRectangle(bounds, 16.0f, 2.0f);
 
-    g.setColour(juce::Colour(65, 43, 29));
-    g.drawHorizontalLine(85, 25.0f, getWidth() - 25.0f);
+    g.setColour(orange.withAlpha(0.35f));
+    g.drawHorizontalLine(95, 25.0f, getWidth() - 25.0f);
 
-    g.setColour(orangeColour.withAlpha(0.35f));
-    g.drawHorizontalLine(365, 25.0f, getWidth() - 25.0f);
-
-    g.setColour(amberColour);
+    g.setColour(amber);
     g.setFont(juce::Font(13.0f, juce::Font::bold));
-    g.drawText("OSCILLATOR & SOUND ENGINE",
-               30, 105, getWidth() - 60, 22,
-               juce::Justification::centredLeft);
+    g.drawText(
+        "SOUND ENGINE  /  OSCILLATORS  /  MOVEMENT",
+        30, 105, getWidth() - 60, 22,
+        juce::Justification::centredLeft);
 
-    g.drawText("MOVEMENT & PERFORMANCE",
-               30, 385, getWidth() - 60, 22,
-               juce::Justification::centredLeft);
-
-    g.setColour(orangeColour.withAlpha(0.12f));
+    g.setColour(orange.withAlpha(0.12f));
     g.fillEllipse(0.0f, 0.0f, 180.0f, 180.0f);
 }
 
@@ -145,35 +153,36 @@ void SonicLureAudioProcessorEditor::resized()
     title.setBounds(area.removeFromTop(42));
     subtitle.setBounds(area.removeFromTop(27));
 
-    area.removeFromTop(38);
-
+    const int gridTop = 125;
     const int gap = 12;
-    const int cellWidth = (area.getWidth() - gap * 3) / 4;
-    const int cellHeight = 125;
+    const int columns = 4;
+    const int cellWidth =
+        (getWidth() - 56 - gap * (columns - 1)) / columns;
+    const int cellHeight = 119;
 
     for (int i = 0; i < controlCount; ++i)
     {
-        if (i == 6)
-            area.removeFromTop(35);
+        const int row = i / columns;
+        const int column = i % columns;
 
-        const int row = i / 4;
-        const int column = i % 4;
-
-        auto cell = juce::Rectangle<int>(
-            area.getX() + column * (cellWidth + gap),
-            area.getY() + row * cellHeight,
+        juce::Rectangle<int> cell(
+            28 + column * (cellWidth + gap),
+            gridTop + row * cellHeight,
             cellWidth,
-            cellHeight - 5);
+            cellHeight - 4);
 
         labels[static_cast<size_t>(i)].setBounds(
-            cell.removeFromTop(22));
+            cell.removeFromTop(23));
 
-        sliders[static_cast<size_t>(i)].setBounds(cell.reduced(4));
+        sliders[static_cast<size_t>(i)].setBounds(
+            cell.reduced(5));
     }
 
     waveformLabel.setBounds(
-        getWidth() / 2 - 145, getHeight() - 47, 110, 25);
+        getWidth() / 2 - 145,
+        getHeight() - 48, 110, 25);
 
     waveform.setBounds(
-        getWidth() / 2 - 30, getHeight() - 48, 150, 28);
+        getWidth() / 2 - 30,
+        getHeight() - 49, 150, 28);
 }
